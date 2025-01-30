@@ -1,0 +1,17 @@
+{
+    "name": "se2412-cli",
+    "version": "1.0.0",
+    "description": "CLI for toll station management",
+    "main": "se2412.js",
+    "bin": {
+      "se2412": "./se2412.js"
+    },
+    "dependencies": {
+      "axios": "^1.6.2",
+      "commander": "^11.1.0",
+      "csv-parser": "^3.0.0",
+      "json2csv": "^6.0.0-alpha.2"
+    }
+  }
+  
+  
