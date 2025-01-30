@@ -140,41 +140,58 @@ initializeDatabase()
     process.exit(1);
   });
 
-// resetstations endpoint
+// Τροποποιημένο endpoint resetstations
 router.post("/admin/resetstations", async (req, res) => {
-  const results = [];
-  const csvFilePath = path.join(__dirname, "..", "data", "tollstations2024.csv");
+  const results = []
+  const csvFilePath = path.join(__dirname, "..", "data", "tollstations2024.csv")
 
   if (!fs.existsSync(csvFilePath)) {
-    return res.json({ status: "failed", info: "CSV file not found" });
+    return res.json({ status: "failed", info: "CSV file not found" })
   }
 
   try {
-    // Clear the toll_station table
-    await pool.query("BEGIN");
-    await pool.query("DELETE FROM toll_station");
+    // Έναρξη συναλλαγής
+    await pool.query("BEGIN")
 
-    // Read the CSV file
+    // Ανάγνωση του αρχείου CSV
     await new Promise((resolve, reject) => {
       fs.createReadStream(csvFilePath)
         .pipe(iconv.decodeStream("UTF-8"))
         .pipe(csv())
         .on("data", (data) => results.push(data))
         .on("end", resolve)
-        .on("error", reject);
-    });
+        .on("error", reject)
+    })
 
-    // Insert new data into the table
+    // Δημιουργία ενός set με όλα τα tollid από το CSV
+    const csvTollIds = new Set(results.map((row) => row.TollID))
+
+    // Εισαγωγή ή ενημέρωση δεδομένων στον πίνακα
     for (const row of results) {
       try {
         await pool.query(
           `INSERT INTO toll_station 
           (tollid, opid, operator, name, pm, locality, road, lat, long, email, price1, price2, price3, price4)
-          VALUES ($3, $1, $2, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+          ON CONFLICT (tollid) 
+          DO UPDATE SET
+            opid = EXCLUDED.opid,
+            operator = EXCLUDED.operator,
+            name = EXCLUDED.name,
+            pm = EXCLUDED.pm,
+            locality = EXCLUDED.locality,
+            road = EXCLUDED.road,
+            lat = EXCLUDED.lat,
+            long = EXCLUDED.long,
+            email = EXCLUDED.email,
+            price1 = EXCLUDED.price1,
+            price2 = EXCLUDED.price2,
+            price3 = EXCLUDED.price3,
+            price4 = EXCLUDED.price4`,
           [
+            row.TollID,
             row.OpID,
             row.Operator,
-            row.TollID,
             row.Name,
             row.PM,
             row.Locality,
@@ -186,20 +203,28 @@ router.post("/admin/resetstations", async (req, res) => {
             row.Price2,
             row.Price3,
             row.Price4,
-          ]
-        );
+          ],
+        )
       } catch (rowError) {
-        console.error("Error inserting row:", rowError);
-        throw rowError;
+        console.error("Error inserting/updating row:", rowError)
+        throw rowError
       }
     }
 
-    await pool.query("COMMIT");
-    res.json({ status: "OK" });
+    // Διαγραφή σταθμών που δεν υπάρχουν πλέον στο CSV
+    await pool.query(
+      `DELETE FROM toll_station WHERE tollid NOT IN (${Array.from(csvTollIds)
+        .map((id) => `'${id}'`)
+        .join(", ")})`,
+    )
+
+    // Ολοκλήρωση της συναλλαγής
+    await pool.query("COMMIT")
+    res.json({ status: "OK" })
   } catch (err) {
-    console.error("Transaction error:", err);
-    await pool.query("ROLLBACK");
-    res.json({ status: "failed", info: err.message });
+    console.error("Transaction error:", err)
+    await pool.query("ROLLBACK")
+    res.json({ status: "failed", info: err.message })
   }
 });
 
