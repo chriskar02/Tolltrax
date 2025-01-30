@@ -246,17 +246,23 @@ router.post("/admin/addpasses", async (req, res) => {
 
     // Insert or update transceiver data
     for (const row of results) {
-      try {
-        await pool.query(
-          `INSERT INTO transceiver (id, providerid)
-           VALUES ($1, $2)
-           ON CONFLICT (id) DO UPDATE SET providerid = EXCLUDED.providerid`,
-          [row.tagRef, row.tagHomeID]
-        );
-      } catch (rowError) {
-        console.error("Error inserting/updating transceiver:", rowError);
-        throw rowError;
-      }
+        try {
+             // Insert provider if it doesn't exist
+             await pool.query(
+                 `INSERT INTO provider (id, name) VALUES ($1, $2) ON CONFLICT (id) DO NOTHING`,
+                 [row.tagHomeID, `Provider ${row.tagHomeID}`]
+             );
+
+              await pool.query(
+                  `INSERT INTO transceiver (id, providerid)
+                   VALUES ($1, $2)
+                   ON CONFLICT (id) DO UPDATE SET providerid = EXCLUDED.providerid`,
+                  [row.tagRef, row.tagHomeID]
+              );
+        } catch (rowError) {
+            console.error("Error inserting/updating transceiver:", rowError);
+            throw rowError;
+        }
     }
 
     // Insert passthrough data
