@@ -6,17 +6,39 @@ const csv = require("csv-parser");
 const path = require("path");
 const iconv = require("iconv-lite"); // Ensure this is installed
 
-// Database configuration
-const pool = new Pool({
-  user: process.env.DB_USER,
-  host: process.env.DB_HOST,
-  database: process.env.DB_NAME,
-  password: process.env.DB_PASSWORD,
-  port: process.env.DB_PORT,
-});
+// Initialize database and tables
+async function initializeDatabase() {
+  // Check/Create Database
+  const adminClient = new Client({
+    user: process.env.DB_USER,
+    host: process.env.DB_HOST,
+    password: process.env.DB_PASSWORD,
+    port: process.env.DB_PORT,
+    database: "postgres",
+  });
 
-// Initialize tables (modified for operator table)
-async function initializeTables() {
+  try {
+    await adminClient.connect();
+    const dbCheck = await adminClient.query(
+      `SELECT 1 FROM pg_database WHERE datname = $1`,
+      [process.env.DB_NAME]
+    );
+    if (dbCheck.rowCount === 0) {
+      await adminClient.query(`CREATE DATABASE ${process.env.DB_NAME}`);
+      console.log(`Database ${process.env.DB_NAME} created.`);
+    }
+  } finally {
+    await adminClient.end();
+  }
+
+  const pool = new Pool({
+    user: process.env.DB_USER,
+    host: process.env.DB_HOST,
+    database: process.env.DB_NAME,
+    password: process.env.DB_PASSWORD,
+    port: process.env.DB_PORT,
+  });
+
   const client = await pool.connect();
   try {
     await client.query(`
@@ -93,10 +115,24 @@ async function initializeTables() {
   } finally {
     client.release();
   }
+
+  return pool;
 }
 
-// Initialize on startup
-initializeTables().catch(console.error);
+
+
+// Initialize database and get pool
+let pool;
+initializeDatabase()
+  .then((initializedPool) => {
+    pool = initializedPool;
+    console.log("Database initialization complete");
+  })
+  .catch((err) => {
+    console.error("Database initialization failed:", err);
+    process.exit(1);
+  });
+
 
 // Helper function for transactions
 async function runTransaction(callback) {
@@ -275,5 +311,44 @@ router.get("/admin/healthcheck", async (req, res) => {
     res.status(500).json({ status: "failed", info: err.message });
   }
 });
+
+// Populate Users
+router.post('/admin/resetusers', async (req, res) => {
+  try {
+    await populateFromCSV(
+      "user",
+      path.join(__dirname, "data", "users.csv"),
+      (row) => ({
+        username: row.username,
+        password: row.password,
+        type: parseInt(row.type)
+      })
+    );
+    res.json({ status: "OK" });
+  } catch (err) {
+    res.status(500).json({ status: "failed", info: err.message });
+  }
+});
+
+// Populate Vehicles 
+router.post('/admin/resetvehicles', async (req, res) => {
+  try {
+    await populateFromCSV(
+      "vehicle",
+      path.join(__dirname, "data", "vehicles.csv"),
+      (row) => ({
+        license_plate: row.license_plate,
+        license_year: parseInt(row.license_year),
+        type: row.type,
+        model: row.model,
+        userid: row.userid
+      })
+    );
+    res.json({ status: "OK" });
+  } catch (err) {
+    res.status(500).json({ status: "failed", info: err.message });
+  }
+});
+
 
 module.exports = router;

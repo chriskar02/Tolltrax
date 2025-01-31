@@ -53,10 +53,10 @@ router.get("/tollStationPasses/:tollStationID/:date_from/:date_to", async (req, 
       `SELECT 
         p.timestamp,
         t.id as tagid,
-        t.providerid as tagprovider,
+        t.operatorid as tagoperator,
         p.charge,
         CASE 
-          WHEN t.providerid = ts.opid THEN 'home'
+          WHEN t.operatorid = ts.opid THEN 'home'
           ELSE 'visitor'
         END as passtype
       FROM passthrough p
@@ -74,7 +74,7 @@ router.get("/tollStationPasses/:tollStationID/:date_from/:date_to", async (req, 
       passID: `${tollStationID}${pass.timestamp.toISOString().replace(/[-:T.Z]/g, "")}`,
       timestamp: pass.timestamp.toISOString().slice(0, 16).replace("T", " "),
       tagID: pass.tagid,
-      tagProvider: pass.tagprovider,
+      tagoperator: pass.tagoperator,
       passType: pass.passtype,
       passCharge: Number.parseFloat(pass.charge),
     }))
@@ -121,7 +121,7 @@ router.get("/passAnalysis/:stationOpID/:tagOpID/:date_from/:date_to", async (req
       JOIN transceiver t ON p.transceiverid = t.id
       JOIN toll_station ts ON p.tollid = ts.tollid
       WHERE ts.opid = $1 
-      AND t.providerid = $2
+      AND t.operatorid = $2
       AND p.timestamp::date BETWEEN $3::date AND $4::date
       ORDER BY p.timestamp ASC`,
       [stationOpID, tagOpID, fromDate, toDate],
@@ -177,7 +177,7 @@ router.get("/passesCost/:tollOpID/:tagOpID/:date_from/:date_to", async (req, res
       JOIN transceiver t ON p.transceiverid = t.id
       JOIN toll_station ts ON p.tollid = ts.tollid
       WHERE ts.opid = $1 
-      AND t.providerid = $2
+      AND t.operatorid = $2
       AND p.timestamp::date BETWEEN $3::date AND $4::date`,
       [tollOpID, tagOpID, fromDate, toDate],
     )
@@ -215,24 +215,24 @@ router.get("/chargesBy/:tollOpID/:date_from/:date_to", async (req, res) => {
     const fromDate = formatDate(date_from)
     const toDate = formatDate(date_to)
 
-    // Get passes and calculate total cost grouped by tag provider
+    // Get passes and calculate total cost grouped by tag operator
     const passesQuery = await pool.query(
       `SELECT 
-        t.providerid as op_ID,
+        t.operatorid as op_ID,
         COUNT(*) as op_number,
         COALESCE(SUM(p.charge), 0) as op_amount
       FROM passthrough p
       JOIN transceiver t ON p.transceiverid = t.id
       JOIN toll_station ts ON p.tollid = ts.tollid
       WHERE ts.opid = $1 
-      AND t.providerid != $1
+      AND t.operatorid != $1
       AND p.timestamp::date BETWEEN $2::date AND $3::date
-      GROUP BY t.providerid
-      ORDER BY t.providerid ASC`,
+      GROUP BY t.operatorid
+      ORDER BY t.operatorid ASC`,
       [tollOpID, fromDate, toDate],
     )
 
-    // Format the PPOList (Per Provider Operations List)
+    // Format the PPOList (Per operator Operations List)
     const PPOList = passesQuery.rows.map((row) => ({
       op_ID: row.op_id,
       op_number: Number.parseInt(row.op_number),
