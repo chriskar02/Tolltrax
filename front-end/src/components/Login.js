@@ -7,12 +7,8 @@ export default function Login({ setIsAuthenticated }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Mock authentication logic
-    if (username === "admin" && password === "password") {
-      setIsAuthenticated(true);
-    } else {
-      alert("Invalid credentials");
-    }
+    // Allow any credentials to log in
+    setIsAuthenticated(true);
   };
 
   return (
@@ -36,3 +32,4 @@ export default function Login({ setIsAuthenticated }) {
     </div>
   );
 }
+
