@@ -177,16 +177,15 @@ def allocate_transceivers(transceivers, normal_users):
         })
 
         # Create transceiver record
-        transceiver_id = create_transceiver_id()
         balance = round(random.uniform(0.0, 100.0), 2)
+        status = random.random() < 0.7
         
         transceiver_records.append({
-            "id": transceiver_id,
+            "id": tag_ref,
             "vehicleid": license_plate,
             "providerid": tag_home_id,
             "balance": balance,
-            "active": True,
-            "tagRef": tag_ref
+            "active": status
         })
 
     return vehicles, transceiver_records
@@ -218,7 +217,7 @@ def main():
               filename="vehicles.csv")
     
     write_csv(transceiver_records,
-              ["id", "vehicleid", "providerid", "balance", "active", "tagRef"],
+              ["id", "vehicleid", "providerid", "balance", "active"],
               filename="transceiver.csv")
 
 def write_csv(data_list, fieldnames, filename):

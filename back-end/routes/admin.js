@@ -111,6 +111,10 @@ async function initializeDatabase() {
       );
     `);
 
+    // Populate users and vehicles
+    await populateUsers(client);
+    await populateVehicles(client);
+
     console.log("Tables verified/created");
   } finally {
     client.release();
@@ -119,6 +123,81 @@ async function initializeDatabase() {
   return pool;
 }
 
+// Helper function to populate users
+async function populateUsers(client) {
+  const userspath = path.join(__dirname, "..", "dummy_data", "users.csv");
+
+  try {
+    if (!fs.existsSync(userspath)) {
+      console.warn("Users CSV file not found, skipping population.");
+      return;
+    }
+
+    const users = [];
+    await new Promise((resolve, reject) => {
+      fs.createReadStream(userspath)
+        .pipe(iconv.decodeStream("UTF-8"))
+        .pipe(csv())
+        .on("data", (row) => users.push(row))
+        .on("end", resolve)
+        .on("error", reject);
+    });
+
+    for (const user of users) {
+      await client.query(
+        `INSERT INTO "user" (username, password, type)
+         VALUES ($1, $2, $3)
+         ON CONFLICT (username) DO NOTHING`,
+        [user.username, user.password, parseInt(user.type)]
+      );
+    }
+
+    console.log("Users populated successfully.");
+  } catch (err) {
+    console.error("Error populating users:", err.message);
+  }
+}
+
+// Helper function to populate vehicles
+async function populateVehicles(client) {
+  const vehiclespath = path.join(__dirname, "..", "dummy_data", "vehicles.csv");
+
+  try {
+    if (!fs.existsSync(vehiclespath)) {
+      console.warn("Vehicles CSV file not found, skipping population.");
+      return;
+    }
+
+    const vehicles = [];
+    await new Promise((resolve, reject) => {
+      fs.createReadStream(vehiclespath)
+        .pipe(iconv.decodeStream("UTF-8"))
+        .pipe(csv())
+        .on("data", (row) => vehicles.push(row))
+        .on("end", resolve)
+        .on("error", reject);
+    });
+
+    for (const vehicle of vehicles) {
+      await client.query(
+        `INSERT INTO vehicle (license_plate, license_year, type, model, userid)
+         VALUES ($1, $2, $3, $4, $5)
+         ON CONFLICT (license_plate) DO NOTHING`,
+        [
+          vehicle.license_plate,
+          parseInt(vehicle.license_year),
+          vehicle.type,
+          vehicle.model,
+          vehicle.userid,
+        ]
+      );
+    }
+
+    console.log("Vehicles populated successfully.");
+  } catch (err) {
+    console.error("Error populating vehicles:", err.message);
+  }
+}
 
 
 // Initialize database and get pool
@@ -149,7 +228,7 @@ async function runTransaction(callback) {
   }
 }
 
-// Reset stations (now handles operators)
+// Reset stations
 router.post("/admin/resetstations", async (req, res) => {
   try {
     await runTransaction(async (client) => {
@@ -229,7 +308,7 @@ router.post("/admin/resetpasses", async (req, res) => {
   }
 });
 
-// Add passes (using dummy transceiver data)
+// Add passes
 router.post("/admin/addpasses", async (req, res) => {
   try {
     let newPasses = 0;
@@ -292,63 +371,65 @@ router.post("/admin/addpasses", async (req, res) => {
   }
 });
 
-// Health check
+//Healthcheck
 router.get("/admin/healthcheck", async (req, res) => {
   try {
-    const client = await pool.connect();
-    const stations = await client.query("SELECT COUNT(*) FROM toll_station");
-    const passes = await client.query("SELECT COUNT(*) FROM passthrough");
-    const transceivers = await client.query("SELECT COUNT(*) FROM transceiver");
-    client.release();
+    const client = await pool.connect()
 
-    res.json({
+    const stationsResult = await client.query("SELECT COUNT(*) FROM toll_station")
+    const tagsResult = await client.query("SELECT COUNT(*) FROM transceiver")
+    const passesResult = await client.query("SELECT COUNT(*) FROM passthrough")
+
+    const n_stations = Number.parseInt(stationsResult.rows[0].count)
+    const n_tags = Number.parseInt(tagsResult.rows[0].count)
+    const n_passes = Number.parseInt(passesResult.rows[0].count)
+
+    const connectionString = `postgresql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`
+
+    client.release()
+
+    res.status(200).json({
       status: "OK",
-      toll_stations: parseInt(stations.rows[0].count),
-      passes: parseInt(passes.rows[0].count),
-      transceivers: parseInt(transceivers.rows[0].count)
-    });
+      dbconnection: connectionString,
+      n_stations: n_stations,
+      n_tags: n_tags,
+      n_passes: n_passes,
+    })
   } catch (err) {
-    res.status(500).json({ status: "failed", info: err.message });
+    console.error("Database connection error:", err)
+    res.status(500).json({
+      status: "failed",
+      dbconnection: `postgresql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`,
+    })
   }
 });
 
-// Populate Users
-router.post('/admin/resetusers', async (req, res) => {
+// API Endpoint to manually reset users
+router.post("/admin/resetusers", async (req, res) => {
   try {
-    await populateFromCSV(
-      "user",
-      path.join(__dirname, "data", "users.csv"),
-      (row) => ({
-        username: row.username,
-        password: row.password,
-        type: parseInt(row.type)
-      })
-    );
+    const client = await pool.connect();
+    await client.query("TRUNCATE TABLE \"user\" RESTART IDENTITY CASCADE");
+    await populateUsers(client);
+    client.release();
     res.json({ status: "OK" });
   } catch (err) {
     res.status(500).json({ status: "failed", info: err.message });
   }
 });
 
-// Populate Vehicles 
-router.post('/admin/resetvehicles', async (req, res) => {
+// API Endpoint to manually reset vehicles
+router.post("/admin/resetvehicles", async (req, res) => {
   try {
-    await populateFromCSV(
-      "vehicle",
-      path.join(__dirname, "data", "vehicles.csv"),
-      (row) => ({
-        license_plate: row.license_plate,
-        license_year: parseInt(row.license_year),
-        type: row.type,
-        model: row.model,
-        userid: row.userid
-      })
-    );
+    const client = await pool.connect();
+    await client.query("TRUNCATE TABLE vehicle RESTART IDENTITY CASCADE");
+    await populateVehicles(client);
+    client.release();
     res.json({ status: "OK" });
   } catch (err) {
     res.status(500).json({ status: "failed", info: err.message });
   }
 });
+
 
 
 module.exports = router;
