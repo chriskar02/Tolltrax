@@ -184,6 +184,7 @@ program
         if (!options.username || !options.passw) {
           throw new Error("Username and password required for usermod")
         }
+
         // Implement user modification logic here
         console.log("User modified successfully")
       } else if (options.users) {

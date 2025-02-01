@@ -1,4 +1,4 @@
-id,vehicleid,providerid,balance,active
+id,vehicleid,operatorid,balance,active
 NAO5ZJA8DZ,UTBXU1,NAO,45.77,True
 NOXFGCAQV,RTTIZZ,NO,15.8,False
 NAONSM43D8,ZGLJ6B,NAO,57.37,True

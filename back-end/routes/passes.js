@@ -37,7 +37,7 @@ router.get("/tollStationPasses/:tollStationID/:date_from/:date_to", async (req, 
     const toDate = formatDate(date_to)
 
     // Get station operator info
-    const stationQuery = await pool.query(`SELECT operator FROM toll_station WHERE tollid = $1`, [tollStationID])
+    const stationQuery = await pool.query(`SELECT operatorid FROM toll_station WHERE tollid = $1`, [tollStationID])
 
     if (stationQuery.rows.length === 0) {
       return res.status(404).json({
@@ -56,7 +56,7 @@ router.get("/tollStationPasses/:tollStationID/:date_from/:date_to", async (req, 
         t.operatorid as tagoperator,
         p.charge,
         CASE 
-          WHEN t.operatorid = ts.opid THEN 'home'
+          WHEN t.operatorid = ts.operatorid THEN 'home'
           ELSE 'visitor'
         END as passtype
       FROM passthrough p
@@ -120,7 +120,7 @@ router.get("/passAnalysis/:stationOpID/:tagOpID/:date_from/:date_to", async (req
       FROM passthrough p
       JOIN transceiver t ON p.transceiverid = t.id
       JOIN toll_station ts ON p.tollid = ts.tollid
-      WHERE ts.opid = $1 
+      WHERE ts.operatorid = $1 
       AND t.operatorid = $2
       AND p.timestamp::date BETWEEN $3::date AND $4::date
       ORDER BY p.timestamp ASC`,
@@ -176,7 +176,7 @@ router.get("/passesCost/:tollOpID/:tagOpID/:date_from/:date_to", async (req, res
       FROM passthrough p
       JOIN transceiver t ON p.transceiverid = t.id
       JOIN toll_station ts ON p.tollid = ts.tollid
-      WHERE ts.opid = $1 
+      WHERE ts.operatorid = $1 
       AND t.operatorid = $2
       AND p.timestamp::date BETWEEN $3::date AND $4::date`,
       [tollOpID, tagOpID, fromDate, toDate],
@@ -224,7 +224,7 @@ router.get("/chargesBy/:tollOpID/:date_from/:date_to", async (req, res) => {
       FROM passthrough p
       JOIN transceiver t ON p.transceiverid = t.id
       JOIN toll_station ts ON p.tollid = ts.tollid
-      WHERE ts.opid = $1 
+      WHERE ts.operatorid = $1 
       AND t.operatorid != $1
       AND p.timestamp::date BETWEEN $2::date AND $3::date
       GROUP BY t.operatorid
