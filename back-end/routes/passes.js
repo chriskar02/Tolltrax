@@ -1,18 +1,8 @@
 const express = require("express")
 const router = express.Router()
-const { initializeDatabase } = require("./db");
+const { getPool } = require("./db");
 
-// Initialize database and get pool
-let pool;
-initializeDatabase()
-  .then((initializedPool) => {
-    pool = initializedPool;
-    console.log("Passes routes connected to the Database");
-  })
-  .catch((err) => {
-    console.error("Database connection for passes failed:", err);
-    process.exit(1);
-  });
+const pool = getPool(); // Get the shared pool instance
 
 
 // Helper function for transactions
