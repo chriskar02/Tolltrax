@@ -4,9 +4,16 @@ const csv = require("csv-parser");
 const path = require("path");
 const iconv = require("iconv-lite");
 
+let pool;
+
 // Initialize database and tables
 async function initializeDatabase() {
   // Check/Create Database
+  if (pool) {
+    console.log("Database already initialized.");
+    return pool; // Return the existing pool if already initialized
+  }
+
   const adminClient = new Client({
     user: process.env.DB_USER,
     host: process.env.DB_HOST,
@@ -29,7 +36,7 @@ async function initializeDatabase() {
     await adminClient.end();
   }
 
-  const pool = new Pool({
+  pool = new Pool({
     user: process.env.DB_USER,
     host: process.env.DB_HOST,
     database: process.env.DB_NAME,
@@ -197,4 +204,13 @@ async function populateVehicles(client) {
   }
 }
 
-module.exports = { initializeDatabase };
+// Getter for accessing the shared connection pool
+function getPool() {
+  if (!pool) {
+    throw new Error("Pool has not been initialized. Call initializeDatabase() first.");
+  }
+  return pool;
+}
+
+// Export the initializeDatabase function for app.js and the pool for other routes
+module.exports = { initializeDatabase, getPool };

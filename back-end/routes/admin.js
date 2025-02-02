@@ -1,24 +1,13 @@
 const express = require("express");
 const router = express.Router();
-const { initializeDatabase } = require("./db");
+const { getPool } = require("./db");
 const path = require("path");
 const fs = require("fs");
 const iconv = require("iconv-lite");
 const csv = require("csv-parser");
 
 
-// Initialize database and get pool
-let pool;
-initializeDatabase()
-    .then((initializedPool) => {
-        pool = initializedPool;
-        console.log("Database initialization complete");
-    })
-    .catch((err) => {
-        console.error("Database initialization failed:", err);
-        process.exit(1);
-    });
-
+const pool = getPool(); // Get the shared pool instance
 
 // Helper function for transactions
 async function runTransaction(callback) {
