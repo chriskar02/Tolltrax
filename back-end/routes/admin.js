@@ -1,11 +1,3 @@
-<<<<<<< HEAD
-const express = require("express")
-const router = express.Router()
-const { getPool } = require("./db");
-
-const pool = getPool(); // Get the shared pool instance
-
-=======
 const express = require("express");
 const router = express.Router();
 const { getPool } = require("./db");
@@ -16,7 +8,6 @@ const csv = require("csv-parser");
 
 
 const pool = getPool(); // Get the shared pool instance
->>>>>>> front-end
 
 // Helper function for transactions
 async function runTransaction(callback) {
@@ -33,181 +24,211 @@ async function runTransaction(callback) {
     }
 }
 
-
-// 20240101 ===> 2024-01-01
-function formatDate(dateString) {
-    return `${dateString.slice(0, 4)}-${dateString.slice(4, 6)}-${dateString.slice(6, 8)}`;
-}
-
-function handleError(res, error) {
-    console.error(error);
-    res.status(500).json({
-        status: "failed",
-        info: error.message
-    });
-}
-
-// a. Toll Station Passes Endpoint
-router.get("/tollStationPasses/:tollStationID/:date_from/:date_to", async (req, res) => {
+// Reset stations
+router.post("/admin/resetstations", async (req, res) => {
     try {
         await runTransaction(async (client) => {
-            const { tollStationID, date_from, date_to } = req.params;
+            const csvPath = path.join(__dirname, "..", "data", "tollstations2024.csv");
 
-            const stationQuery = await client.query(
-                `SELECT operatorid FROM toll_station WHERE tollid = $1`,
-                [tollStationID]
-            );
+            // Process operators first
+            const operators = new Map();
+            const stations = [];
 
-            if (!stationQuery.rows.length) {
-                return res.status(404).json({
-                    status: "failed",
-                    info: `Station ${tollStationID} not found`
-                });
+            await new Promise((resolve, reject) => {
+                fs.createReadStream(csvPath)
+                    .pipe(iconv.decodeStream("UTF-8"))
+                    .pipe(csv())
+                    .on("data", (row) => {
+                        if (!operators.has(row.OpID)) {
+                            operators.set(row.OpID, row.Operator);
+                        }
+                        stations.push(row);
+                    })
+                    .on("end", resolve)
+                    .on("error", reject);
+            });
+
+            // Insert operators
+            for (const [id, name] of operators) {
+                await client.query(
+                    `INSERT INTO operator (id, name) VALUES ($1, $2)
+           ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name`,
+                    [id, name]
+                );
             }
 
-            const passes = await client.query(
-                `SELECT
-          p.timestamp, t.id as tagid, t.operatorid as tagoperator, p.charge,
-          CASE
-            WHEN t.operatorid = ts.operatorid THEN 'home'
-            ELSE 'visitor'
-          END as passtype
-         FROM passthrough p
-         JOIN transceiver t ON p.transceiverid = t.id
-         JOIN toll_station ts ON p.tollid = ts.tollid
-         WHERE p.tollid = $1 AND p.timestamp::date BETWEEN $2 AND $3
-         ORDER BY p.timestamp ASC`,
-                [tollStationID, formatDate(date_from), formatDate(date_to)]
-            );
-
-            res.json({
-                stationID: tollStationID,
-                stationOperator: stationQuery.rows[0].operatorid,
-                requestTimestamp: new Date().toISOString().slice(0, 16).replace("T", " "),
-                periodFrom: formatDate(date_from),
-                periodTo: formatDate(date_to),
-                nPasses: passes.rows.length,
-                passList: passes.rows.map((pass, index) => ({
-                    passIndex: index + 1,
-                    passID: `${tollStationID}${pass.timestamp.toISOString().replace(/[-:T.Z]/g, "")}`,
-                    timestamp: pass.timestamp.toISOString().slice(0, 16).replace("T", " "),
-                    tagID: pass.tagid,
-                    tagProvider: pass.tagprovider,
-                    passType: pass.passtype,
-                    passCharge: Number(pass.charge),
-                }))
-            });
+            // Insert/update stations
+            for (const station of stations) {
+                await client.query(
+                    `INSERT INTO toll_station VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+           ON CONFLICT (tollid) DO UPDATE SET
+             operatorid = EXCLUDED.operatorid,
+             name = EXCLUDED.name,
+             lat = EXCLUDED.lat,
+             long = EXCLUDED.long,
+             price1 = EXCLUDED.price1,
+             price2 = EXCLUDED.price2,
+             price3 = EXCLUDED.price3,
+             price4 = EXCLUDED.price4`,
+                    [
+                        station.TollID,
+                        station.OpID,
+                        station.Name,
+                        station.Lat,
+                        station.Long,
+                        station.Price1,
+                        station.Price2,
+                        station.Price3,
+                        station.Price4
+                    ]
+                );
+            }
         });
-    } catch (error) {
-        handleError(res, error);
+
+        res.json({ status: "OK" });
+    } catch (err) {
+        console.error("Reset stations error:", err);
+        res.status(500).json({ status: "failed", info: err.message });
     }
 });
 
-// B. Pass Analysis Endpoint
-router.get("/passAnalysis/:stationOpID/:tagOpID/:date_from/:date_to", async (req, res) => {
+// Reset passes
+router.post("/admin/resetpasses", async (req, res) => {
     try {
         await runTransaction(async (client) => {
-            const { stationOpID, tagOpID, date_from, date_to } = req.params;
-
-            const passes = await client.query(
-                `SELECT p.timestamp, ts.tollid as stationid, t.id as tagid, p.charge
-         FROM passthrough p
-         JOIN transceiver t ON p.transceiverid = t.id
-         JOIN toll_station ts ON p.tollid = ts.tollid
-         WHERE ts.operatorid = $1 AND t.operatorid = $2
-         AND p.timestamp::date BETWEEN $3 AND $4
-         ORDER BY p.timestamp ASC`,
-                [stationOpID, tagOpID, formatDate(date_from), formatDate(date_to)]
-            );
-
-            res.json({
-                stationOpID: stationOpID,
-                tagOpID: tagOpID,
-                requestTimestamp: new Date().toISOString().slice(0, 16).replace("T", " "),
-                periodFrom: formatDate(date_from),
-                periodTo: formatDate(date_to),
-                nPasses: passes.rows.length,
-                passList: passes.rows.map((pass, index) => ({
-                    passIndex: index + 1,
-                    passID: `${pass.stationid}${pass.timestamp.toISOString().replace(/[-:T.Z]/g, "")}`,
-                    stationID: pass.stationid,
-                    timestamp: pass.timestamp.toISOString().slice(0, 16).replace("T", " "),
-                    tagID: pass.tagid,
-                    passCharge: Number(pass.charge)
-                }))
-            });
+            await client.query(`
+                TRUNCATE TABLE passthrough,
+                transceiver RESTART IDENTITY;
+            `);
         });
-    } catch (error) {
-        handleError(res, error);
+        res.json({ status: "OK" });
+    } catch (err) {
+        res.status(500).json({ status: "failed", info: err.message });
     }
 });
 
-// C. Passes Cost Endpoint
-router.get("/passesCost/:tollOpID/:tagOpID/:date_from/:date_to", async (req, res) => {
+// Add passes
+router.post("/admin/addpasses", async (req, res) => {
     try {
+        let newPasses = 0;
+
         await runTransaction(async (client) => {
-            const { tollOpID, tagOpID, date_from, date_to } = req.params;
+            const csvPath = path.join(__dirname, "..", "data", "passes-sample.csv");
+            const passes = [];
 
-            const result = await client.query(
-                `SELECT COUNT(*) as pass_count, COALESCE(SUM(p.charge), 0) as total_cost
-         FROM passthrough p
-         JOIN transceiver t ON p.transceiverid = t.id
-         JOIN toll_station ts ON p.tollid = ts.tollid
-         WHERE ts.operatorid = $1 AND t.operatorid = $2
-         AND p.timestamp::date BETWEEN $3 AND $4`,
-                [tollOpID, tagOpID, formatDate(date_from), formatDate(date_to)]
-            );
-
-            const { pass_count, total_cost } = result.rows[0];
-            res.json({
-                tollOpID: tollOpID,
-                tagOpID: tagOpID,
-                requestTimestamp: new Date().toISOString().slice(0, 16).replace("T", " "),
-                periodFrom: formatDate(date_from),
-                periodTo: formatDate(date_to),
-                nPasses: Number(pass_count),
-                passesCost: Number(total_cost)
+            await new Promise((resolve, reject) => {
+                fs.createReadStream(csvPath)
+                    .pipe(iconv.decodeStream("UTF-8"))
+                    .pipe(csv())
+                    .on("data", (row) => passes.push(row))
+                    .on("end", resolve)
+                    .on("error", reject);
             });
+
+            // Insert transceivers from dummy data
+            const transceiversPath = path.join(__dirname, "..", "dummy_data", "transceiver.csv");
+            const transceivers = [];
+
+            await new Promise((resolve, reject) => {
+                fs.createReadStream(transceiversPath)
+                    .pipe(csv())
+                    .on("data", (row) => transceivers.push(row))
+                    .on("end", resolve)
+                    .on("error", reject);
+            });
+
+            for (const t of transceivers) {
+                await client.query(
+                    `INSERT INTO transceiver (id, vehicleid, operatorid, balance, active)
+           VALUES ($1, $2, $3, $4, $5)
+           ON CONFLICT (id) DO NOTHING`,
+                    [t.id, t.vehicleid, t.operatorid, t.balance, t.active === "True"]
+                );
+            }
+
+            // Insert passes
+            for (const pass of passes) {
+                const result = await client.query(
+                    `INSERT INTO passthrough (timestamp, tollid, transceiverid, charge)
+           VALUES ($1, $2, $3, $4)
+           ON CONFLICT DO NOTHING`,
+                    [
+                        pass.timestamp,
+                        pass.tollID,
+                        pass.tagRef,
+                        pass.charge
+                    ]
+                );
+                if (result.rowCount > 0) newPasses++;
+            }
         });
-    } catch (error) {
-        handleError(res, error);
+
+        res.json({ status: "OK", newPasses });
+    } catch (err) {
+        console.error("Add passes error:", err);
+        res.status(500).json({ status: "failed", info: err.message });
     }
 });
 
-// D. Charges By Endpoint
-router.get("/chargesBy/:tollOpID/:date_from/:date_to", async (req, res) => {
+//Healthcheck
+router.get("/admin/healthcheck", async (req, res) => {
     try {
-        await runTransaction(async (client) => {
-            const { tollOpID, date_from, date_to } = req.params;
+        const client = await pool.connect()
 
-            const result = await client.query(
-                `SELECT t.operatorid as op_id, COUNT(*) as op_number, 
-         COALESCE(SUM(p.charge), 0) as op_amount
-         FROM passthrough p
-         JOIN transceiver t ON p.transceiverid = t.id
-         JOIN toll_station ts ON p.tollid = ts.tollid
-         WHERE ts.operatorid = $1 AND t.operatorid != $1
-         AND p.timestamp::date BETWEEN $2 AND $3
-         GROUP BY t.operatorid
-         ORDER BY t.operatorid ASC`,
-                [tollOpID, formatDate(date_from), formatDate(date_to)]
-            );
+        const stationsResult = await client.query("SELECT COUNT(*) FROM toll_station")
+        const tagsResult = await client.query("SELECT COUNT(*) FROM transceiver")
+        const passesResult = await client.query("SELECT COUNT(*) FROM passthrough")
 
-            res.json({
-                tollOpID: tollOpID,
-                requestTimestamp: new Date().toISOString().slice(0, 16).replace("T", " "),
-                periodFrom: formatDate(date_from),
-                periodTo: formatDate(date_to),
-                vOpList: result.rows.map(row => ({
-                    visitingOpID: row.op_id,
-                    nPasses: Number(row.op_number),
-                    passesCost: Number(row.op_amount)
-                }))
-            });
-        });
-    } catch (error) {
-        handleError(res, error);
+        const n_stations = Number.parseInt(stationsResult.rows[0].count)
+        const n_tags = Number.parseInt(tagsResult.rows[0].count)
+        const n_passes = Number.parseInt(passesResult.rows[0].count)
+
+        const connectionString = `postgresql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`
+
+        client.release()
+
+        res.status(200).json({
+            status: "OK",
+            dbconnection: connectionString,
+            n_stations: n_stations,
+            n_tags: n_tags,
+            n_passes: n_passes,
+        })
+    } catch (err) {
+        console.error("Database connection error:", err)
+        res.status(500).json({
+            status: "failed",
+            dbconnection: `postgresql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`,
+        })
     }
 });
+
+// API Endpoint to manually reset users
+router.post("/admin/resetusers", async (req, res) => {
+    try {
+        const client = await pool.connect();
+        await client.query("TRUNCATE TABLE \"user\" RESTART IDENTITY CASCADE");
+        await populateUsers(client);
+        client.release();
+        res.json({ status: "OK" });
+    } catch (err) {
+        res.status(500).json({ status: "failed", info: err.message });
+    }
+});
+
+// API Endpoint to manually reset vehicles
+router.post("/admin/resetvehicles", async (req, res) => {
+    try {
+        const client = await pool.connect();
+        await client.query("TRUNCATE TABLE vehicle RESTART IDENTITY CASCADE");
+        await populateVehicles(client);
+        client.release();
+        res.json({ status: "OK" });
+    } catch (err) {
+        res.status(500).json({ status: "failed", info: err.message });
+    }
+});
+
+
 
 module.exports = router;
