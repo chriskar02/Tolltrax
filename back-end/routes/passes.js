@@ -1,263 +1,210 @@
 const express = require("express")
 const router = express.Router()
-const { Pool } = require("pg")
+const { initializeDatabase } = require("./db");
 
-const pool = new Pool({
-  user: process.env.DB_USER,
-  host: process.env.DB_HOST,
-  database: process.env.DB_NAME,
-  password: process.env.DB_PASSWORD,
-  port: process.env.DB_PORT,
-})
+// Initialize database and get pool
+let pool;
+initializeDatabase()
+  .then((initializedPool) => {
+    pool = initializedPool;
+    console.log("Passes routes connected to the Database");
+  })
+  .catch((err) => {
+    console.error("Database connection for passes failed:", err);
+    process.exit(1);
+  });
 
-// Προσθέτουμε logging
-console.log("Passes routes loaded")
 
-// Test endpoint
-router.get("/passes-test", (req, res) => {
-  res.json({ message: "Passes route works!" })
-})
-
-// Helper function to format date from YYYYMMDD to YYYY-MM-DD
-function formatDate(dateString) {
-  const year = dateString.substring(0, 4)
-  const month = dateString.substring(4, 6)
-  const day = dateString.substring(6, 8)
-  return `${year}-${month}-${day}`
+// Helper function for transactions
+async function runTransaction(callback) {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    await callback(client);
+    await client.query("COMMIT");
+  } catch (err) {
+    await client.query("ROLLBACK");
+    throw err;
+  } finally {
+    client.release();
+  }
 }
 
-// Endpoint για το tollStationPasses (λειτουργία a)
+
+// 20240101 ===> 2024-01-01
+function formatDate(dateString) {
+  return `${dateString.slice(0, 4)}-${dateString.slice(4, 6)}-${dateString.slice(6, 8)}`;
+}
+
+function handleError(res, error) {
+  console.error(error);
+  res.status(500).json({
+    status: "failed",
+    info: error.message
+  });
+}
+
+// a. Toll Station Passes Endpoint
 router.get("/tollStationPasses/:tollStationID/:date_from/:date_to", async (req, res) => {
-  console.log("Request received:", req.params)
   try {
-    const { tollStationID, date_from, date_to } = req.params
+    await runTransaction(async (client) => {
+      const { tollStationID, date_from, date_to } = req.params;
 
-    // Format dates for SQL query
-    const fromDate = formatDate(date_from)
-    const toDate = formatDate(date_to)
+      const stationQuery = await client.query(
+        `SELECT operatorid FROM toll_station WHERE tollid = $1`,
+        [tollStationID]
+      );
 
-    // Get station operator info
-    const stationQuery = await pool.query(`SELECT operatorid FROM toll_station WHERE tollid = $1`, [tollStationID])
+      if (!stationQuery.rows.length) {
+        return res.status(404).json({
+          status: "failed",
+          info: `Station ${tollStationID} not found`
+        });
+      }
 
-    if (stationQuery.rows.length === 0) {
-      return res.status(404).json({
-        status: "failed",
-        message: `Station with ID ${tollStationID} not found`,
-      })
-    }
+      const passes = await client.query(
+        `SELECT
+          p.timestamp, t.id as tagid, t.operatorid as tagoperator, p.charge,
+          CASE
+            WHEN t.operatorid = ts.operatorid THEN 'home'
+            ELSE 'visitor'
+          END as passtype
+         FROM passthrough p
+         JOIN transceiver t ON p.transceiverid = t.id
+         JOIN toll_station ts ON p.tollid = ts.tollid
+         WHERE p.tollid = $1 AND p.timestamp::date BETWEEN $2 AND $3
+         ORDER BY p.timestamp ASC`,
+        [tollStationID, formatDate(date_from), formatDate(date_to)]
+      );
 
-    const stationOperator = stationQuery.rows[0].operator
-
-    // Get passes for the station within the date range
-    const passesQuery = await pool.query(
-      `SELECT 
-        p.timestamp,
-        t.id as tagid,
-        t.operatorid as tagoperator,
-        p.charge,
-        CASE 
-          WHEN t.operatorid = ts.operatorid THEN 'home'
-          ELSE 'visitor'
-        END as passtype
-      FROM passthrough p
-      JOIN transceiver t ON p.transceiverid = t.id
-      JOIN toll_station ts ON p.tollid = ts.tollid
-      WHERE p.tollid = $1 
-      AND p.timestamp::date BETWEEN $2::date AND $3::date
-      ORDER BY p.timestamp ASC`,
-      [tollStationID, fromDate, toDate],
-    )
-
-    // Format the response according to specifications
-    const passList = passesQuery.rows.map((pass, index) => ({
-      passIndex: index + 1,
-      passID: `${tollStationID}${pass.timestamp.toISOString().replace(/[-:T.Z]/g, "")}`,
-      timestamp: pass.timestamp.toISOString().slice(0, 16).replace("T", " "),
-      tagID: pass.tagid,
-      tagoperator: pass.tagoperator,
-      passType: pass.passtype,
-      passCharge: Number.parseFloat(pass.charge),
-    }))
-
-    const response = {
-      stationID: tollStationID,
-      stationOperator: stationOperator,
-      requestTimestamp: new Date().toISOString().slice(0, 16).replace("T", " "),
-      periodFrom: fromDate,
-      periodTo: toDate,
-      nPasses: passList.length,
-      passList: passList,
-    }
-
-    console.log("Sending response:", response)
-    res.json(response)
+      res.json({
+        stationID: tollStationID,
+        stationOperator: stationQuery.rows[0].operatorid,
+        requestTimestamp: new Date().toISOString().slice(0, 16).replace("T", " "),
+        periodFrom: formatDate(date_from),
+        periodTo: formatDate(date_to),
+        nPasses: passes.rows.length,
+        passList: passes.rows.map((pass, index) => ({
+          passIndex: index + 1,
+          passID: `${tollStationID}${pass.timestamp.toISOString().replace(/[-:T.Z]/g, "")}`,
+          timestamp: pass.timestamp.toISOString().slice(0, 16).replace("T", " "),
+          tagID: pass.tagid,
+          tagProvider: pass.tagprovider,
+          passType: pass.passtype,
+          passCharge: Number(pass.charge),
+        }))
+      });
+    });
   } catch (error) {
-    console.error("Error in tollStationPasses:", error)
-    res.status(500).json({
-      status: "failed",
-      message: error.message,
-    })
+    handleError(res, error);
   }
-})
+});
 
-// Endpoint για το passAnalysis (λειτουργία b)
+// B. Pass Analysis Endpoint
 router.get("/passAnalysis/:stationOpID/:tagOpID/:date_from/:date_to", async (req, res) => {
-  console.log("Pass Analysis request received:", req.params)
   try {
-    const { stationOpID, tagOpID, date_from, date_to } = req.params
+    await runTransaction(async (client) => {
+      const { stationOpID, tagOpID, date_from, date_to } = req.params;
 
-    // Format dates for SQL query
-    const fromDate = formatDate(date_from)
-    const toDate = formatDate(date_to)
+      const passes = await client.query(
+        `SELECT p.timestamp, ts.tollid as stationid, t.id as tagid, p.charge
+         FROM passthrough p
+         JOIN transceiver t ON p.transceiverid = t.id
+         JOIN toll_station ts ON p.tollid = ts.tollid
+         WHERE ts.operatorid = $1 AND t.operatorid = $2
+         AND p.timestamp::date BETWEEN $3 AND $4
+         ORDER BY p.timestamp ASC`,
+        [stationOpID, tagOpID, formatDate(date_from), formatDate(date_to)]
+      );
 
-    // Get passes for stations operated by stationOpID and tags provided by tagOpID
-    const passesQuery = await pool.query(
-      `SELECT 
-        p.timestamp,
-        ts.tollid as stationid,
-        t.id as tagid,
-        p.charge
-      FROM passthrough p
-      JOIN transceiver t ON p.transceiverid = t.id
-      JOIN toll_station ts ON p.tollid = ts.tollid
-      WHERE ts.operatorid = $1 
-      AND t.operatorid = $2
-      AND p.timestamp::date BETWEEN $3::date AND $4::date
-      ORDER BY p.timestamp ASC`,
-      [stationOpID, tagOpID, fromDate, toDate],
-    )
-
-    // Format the response according to specifications
-    const passList = passesQuery.rows.map((pass, index) => ({
-      passIndex: index + 1,
-      passID: `${pass.stationid}${pass.timestamp.toISOString().replace(/[-:T.Z]/g, "")}`,
-      stationID: pass.stationid,
-      timestamp: pass.timestamp.toISOString().slice(0, 16).replace("T", " "),
-      tagID: pass.tagid,
-      passCharge: Number.parseFloat(pass.charge),
-    }))
-
-    const response = {
-      stationOpID: stationOpID,
-      tagOpID: tagOpID,
-      requestTimestamp: new Date().toISOString().slice(0, 16).replace("T", " "),
-      periodFrom: fromDate,
-      periodTo: toDate,
-      nPasses: passList.length,
-      passList: passList,
-    }
-
-    console.log("Sending pass analysis response:", response)
-    res.json(response)
+      res.json({
+        stationOpID: stationOpID,
+        tagOpID: tagOpID,
+        requestTimestamp: new Date().toISOString().slice(0, 16).replace("T", " "),
+        periodFrom: formatDate(date_from),
+        periodTo: formatDate(date_to),
+        nPasses: passes.rows.length,
+        passList: passes.rows.map((pass, index) => ({
+          passIndex: index + 1,
+          passID: `${pass.stationid}${pass.timestamp.toISOString().replace(/[-:T.Z]/g, "")}`,
+          stationID: pass.stationid,
+          timestamp: pass.timestamp.toISOString().slice(0, 16).replace("T", " "),
+          tagID: pass.tagid,
+          passCharge: Number(pass.charge)
+        }))
+      });
+    });
   } catch (error) {
-    console.error("Error in passAnalysis:", error)
-    res.status(500).json({
-      status: "failed",
-      message: error.message,
-    })
+    handleError(res, error);
   }
-})
+});
 
-// Νέο endpoint για το passesCost (λειτουργία c)
+// C. Passes Cost Endpoint
 router.get("/passesCost/:tollOpID/:tagOpID/:date_from/:date_to", async (req, res) => {
-  console.log("Passes Cost request received:", req.params)
   try {
-    const { tollOpID, tagOpID, date_from, date_to } = req.params
+    await runTransaction(async (client) => {
+      const { tollOpID, tagOpID, date_from, date_to } = req.params;
 
-    // Format dates for SQL query
-    const fromDate = formatDate(date_from)
-    const toDate = formatDate(date_to)
+      const result = await client.query(
+        `SELECT COUNT(*) as pass_count, COALESCE(SUM(p.charge), 0) as total_cost
+         FROM passthrough p
+         JOIN transceiver t ON p.transceiverid = t.id
+         JOIN toll_station ts ON p.tollid = ts.tollid
+         WHERE ts.operatorid = $1 AND t.operatorid = $2
+         AND p.timestamp::date BETWEEN $3 AND $4`,
+        [tollOpID, tagOpID, formatDate(date_from), formatDate(date_to)]
+      );
 
-    // Get passes and calculate total cost
-    const passesQuery = await pool.query(
-      `SELECT 
-        COUNT(*) as pass_count,
-        COALESCE(SUM(p.charge), 0) as total_cost
-      FROM passthrough p
-      JOIN transceiver t ON p.transceiverid = t.id
-      JOIN toll_station ts ON p.tollid = ts.tollid
-      WHERE ts.operatorid = $1 
-      AND t.operatorid = $2
-      AND p.timestamp::date BETWEEN $3::date AND $4::date`,
-      [tollOpID, tagOpID, fromDate, toDate],
-    )
-
-    const { pass_count, total_cost } = passesQuery.rows[0]
-
-    const response = {
-      tollOpID: tollOpID,
-      tagOpID: tagOpID,
-      requestTimestamp: new Date().toISOString().slice(0, 16).replace("T", " "),
-      periodFrom: fromDate,
-      periodTo: toDate,
-      nPasses: Number.parseInt(pass_count),
-      passesCost: Number.parseFloat(total_cost),
-    }
-
-    console.log("Sending passes cost response:", response)
-    res.json(response)
+      const { pass_count, total_cost } = result.rows[0];
+      res.json({
+        tollOpID: tollOpID,
+        tagOpID: tagOpID,
+        requestTimestamp: new Date().toISOString().slice(0, 16).replace("T", " "),
+        periodFrom: formatDate(date_from),
+        periodTo: formatDate(date_to),
+        nPasses: Number(pass_count),
+        passesCost: Number(total_cost)
+      });
+    });
   } catch (error) {
-    console.error("Error in passesCost:", error)
-    res.status(500).json({
-      status: "failed",
-      message: error.message,
-    })
+    handleError(res, error);
   }
-})
+});
 
-// Νέο endpoint για το chargesBy (λειτουργία d)
+// D. Charges By Endpoint
 router.get("/chargesBy/:tollOpID/:date_from/:date_to", async (req, res) => {
-  console.log("Charges By request received:", req.params)
   try {
-    const { tollOpID, date_from, date_to } = req.params
+    await runTransaction(async (client) => {
+      const { tollOpID, date_from, date_to } = req.params;
 
-    // Format dates for SQL query
-    const fromDate = formatDate(date_from)
-    const toDate = formatDate(date_to)
+      const result = await client.query(
+        `SELECT t.operatorid as op_id, COUNT(*) as op_number, 
+         COALESCE(SUM(p.charge), 0) as op_amount
+         FROM passthrough p
+         JOIN transceiver t ON p.transceiverid = t.id
+         JOIN toll_station ts ON p.tollid = ts.tollid
+         WHERE ts.operatorid = $1 AND t.operatorid != $1
+         AND p.timestamp::date BETWEEN $2 AND $3
+         GROUP BY t.operatorid
+         ORDER BY t.operatorid ASC`,
+        [tollOpID, formatDate(date_from), formatDate(date_to)]
+      );
 
-    // Get passes and calculate total cost grouped by tag operator
-    const passesQuery = await pool.query(
-      `SELECT 
-        t.operatorid as op_ID,
-        COUNT(*) as op_number,
-        COALESCE(SUM(p.charge), 0) as op_amount
-      FROM passthrough p
-      JOIN transceiver t ON p.transceiverid = t.id
-      JOIN toll_station ts ON p.tollid = ts.tollid
-      WHERE ts.operatorid = $1 
-      AND t.operatorid != $1
-      AND p.timestamp::date BETWEEN $2::date AND $3::date
-      GROUP BY t.operatorid
-      ORDER BY t.operatorid ASC`,
-      [tollOpID, fromDate, toDate],
-    )
-
-    // Format the PPOList (Per operator Operations List)
-    const PPOList = passesQuery.rows.map((row) => ({
-      op_ID: row.op_id,
-      op_number: Number.parseInt(row.op_number),
-      op_amount: Number.parseFloat(row.op_amount),
-    }))
-
-    const response = {
-      tollOpID: tollOpID,
-      requestTimestamp: new Date().toISOString().slice(0, 16).replace("T", " "),
-      periodFrom: fromDate,
-      periodTo: toDate,
-      PPOList: PPOList,
-    }
-
-    console.log("Sending charges by response:", response)
-    res.json(response)
+      res.json({
+        tollOpID: tollOpID,
+        requestTimestamp: new Date().toISOString().slice(0, 16).replace("T", " "),
+        periodFrom: formatDate(date_from),
+        periodTo: formatDate(date_to),
+        vOpList: result.rows.map(row => ({
+          visitingOpID: row.op_id,
+          nPasses: Number(row.op_number),
+          passesCost: Number(row.op_amount)
+        }))
+      });
+    });
   } catch (error) {
-    console.error("Error in chargesBy:", error)
-    res.status(500).json({
-      status: "failed",
-      message: error.message,
-    })
+    handleError(res, error);
   }
-})
+});
 
-module.exports = router
-
-
+module.exports = router;

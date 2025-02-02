@@ -150,7 +150,7 @@ router.post("/admin/addpasses", async (req, res) => {
                     `INSERT INTO transceiver (id, vehicleid, operatorid, balance, active)
            VALUES ($1, $2, $3, $4, $5)
            ON CONFLICT (id) DO NOTHING`,
-                    [t.id, t.vehicleid, t.operatorid, t.balance, t.active]
+                    [t.id, t.vehicleid, t.operatorid, t.balance, t.active === "True"]
                 );
             }
 
