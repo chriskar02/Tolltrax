@@ -107,7 +107,10 @@ router.post("/admin/resetstations", async (req, res) => {
 router.post("/admin/resetpasses", async (req, res) => {
     try {
         await runTransaction(async (client) => {
-            await client.query("TRUNCATE TABLE passthrough");
+            await client.query(`
+                TRUNCATE TABLE passthrough,
+                transceiver RESTART IDENTITY;
+            `);
         });
         res.json({ status: "OK" });
     } catch (err) {
