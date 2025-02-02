@@ -1,12 +1,12 @@
 import React from 'react';
 
-function Home() {
+const HomePage = () => {
   return (
-    <div>
-      <h1>Welcome to the Tollway System</h1>
-      <p>This is the home page of our application.</p>
+    <div className="container mt-5">
+      <h1>Welcome to TollTrax</h1>
+      <p>Your one-stop solution for toll management.</p>
     </div>
   );
-}
+};
 
-export default Home;
+export default HomePage;
