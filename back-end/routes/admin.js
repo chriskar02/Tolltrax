@@ -1,9 +1,22 @@
+<<<<<<< HEAD
 const express = require("express")
 const router = express.Router()
 const { getPool } = require("./db");
 
 const pool = getPool(); // Get the shared pool instance
 
+=======
+const express = require("express");
+const router = express.Router();
+const { getPool } = require("./db");
+const path = require("path");
+const fs = require("fs");
+const iconv = require("iconv-lite");
+const csv = require("csv-parser");
+
+
+const pool = getPool(); // Get the shared pool instance
+>>>>>>> front-end
 
 // Helper function for transactions
 async function runTransaction(callback) {

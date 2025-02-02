@@ -36,4 +36,8 @@ initializeDatabase()
     console.error("Failed to initialize database:", err.message);
   });
 
+<<<<<<< HEAD
 module.exports = app;
+=======
+module.exports = app;
+>>>>>>> front-end
