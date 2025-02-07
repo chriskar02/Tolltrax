@@ -1,0 +1,23 @@
+{
+    "answers": {
+        "phase": "requirements gathering",
+        "action": "use case specification",
+        "scope": "uml sequence",
+        "action experience": 4,
+        "language": "n/a",
+        "other language": "<fill in>",
+        "aimodel": "chatgpt",
+        "aimodel version": "4.0",
+        "open source aimodel": "<fill in>",
+        "tool option": "online free",
+        "experience with tool": 4,
+        "time allocated (h)": "1",
+        "time saved estimate (h)": "2",
+        "quality of ai help": 5,
+        "knowledge acquired": 4,
+        "generic feeling - now": 5,
+        "generic feeling - future": 5,
+        "threat level": 0,
+        "notes": "<fill in>"
+    }
+}
