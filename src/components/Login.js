@@ -17,7 +17,7 @@ function Login({ setIsAuthenticated }) {
       return;
     }
 
-    setError(''); // Clear previous errors
+    setError('');
 
     try {
       const response = await axios.post('http://localhost:3000/api/auth/login', {
@@ -43,7 +43,7 @@ function Login({ setIsAuthenticated }) {
   return (
       <Container fluid className="vh-100 d-flex justify-content-center align-items-center bg-light">
         <Row>
-          <Col xs={10} md={12} lg={12}> {/* Adjust column width */}
+          <Col xs={10} md={12} lg={12}>
             <h2 className="text-center mb-4">Login</h2>
             {error && <Alert variant="danger">{error}</Alert>}
             <Form onSubmit={handleSubmit} className="p-4 border rounded bg-white shadow">
@@ -72,11 +72,6 @@ function Login({ setIsAuthenticated }) {
               <Button variant="primary" type="submit" className="w-100">
                 Login
               </Button>
-              <p className="text-center mt-3">
-                <a href="#" style={{ textDecoration: 'underline', color: 'blue' }}>
-                  No account? Sign Up
-                </a>
-              </p>
             </Form>
           </Col>
         </Row>
