@@ -1,7 +1,7 @@
 import csv
 import random
 import string
-import hashlib
+import bcrypt
 from collections import defaultdict, Counter
 
 ########################################
@@ -15,7 +15,7 @@ def generate_users():
     - 10 admin users (type=3)
 
     Returns a list of dict with:
-      { "username": str, "password": str, "type": int }
+      { "username": str, "password": str (bcrypt hashed), "type": int }
     """
     user_type_counts = {
         0: 40,  # normal
@@ -31,16 +31,26 @@ def generate_users():
     }
 
     all_users = []
+    passwords_data = []
+    
     for t, count in user_type_counts.items():
         for i in range(count):
             uname = f"{type_labels[t]}{i:04d}"
             pw_plain = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
-            pw_hash = hashlib.sha256(pw_plain.encode()).hexdigest()
+            pw_hash = bcrypt.hashpw(pw_plain.encode(), bcrypt.gensalt()).decode()  
+            
             all_users.append({
                 "username": uname,
-                "password": pw_hash,
+                "password": pw_hash,  
                 "type": t
             })
+            
+            passwords_data.append({
+                "username": uname,
+                "password": pw_plain  
+            })
+    
+    save_passwords_csv(passwords_data)  
     return all_users
 
 def save_users_csv(users, outfile="users.csv"):
@@ -49,6 +59,13 @@ def save_users_csv(users, outfile="users.csv"):
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(users)
+
+def save_passwords_csv(passwords, outfile="passwords.csv"):
+    fieldnames = ["username", "password"]
+    with open(outfile, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(passwords)
 
 ########################################
 # 2. Load Toll Station Data

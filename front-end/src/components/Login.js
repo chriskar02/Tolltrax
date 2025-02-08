@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Form, Button, Container, Row, Col, Alert } from 'react-bootstrap';
+import axios from 'axios';
 
 function Login({ setIsAuthenticated }) {
   const [username, setUsername] = useState('');
@@ -10,13 +11,33 @@ function Login({ setIsAuthenticated }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
     if (!username || !password) {
       setError('Please fill in all fields');
       return;
     }
-    setError('');
-    setIsAuthenticated(true); // Mock login success: todo: will need to implement this later
-    navigate('/home');
+
+    setError(''); // Clear previous errors
+
+    try {
+      const response = await axios.post('http://localhost:3000/api/auth/login', {
+        username,
+        password,
+      });
+
+      const token = response.data.token;
+      
+      // Save token in localStorage
+      localStorage.setItem('authToken', token);
+
+      // Update authentication state
+      setIsAuthenticated(true);
+
+      console.log("Login successful! Redirecting...");
+      navigate('/home');
+    } catch (error) {
+      setError(error.response?.data?.error || 'Login failed. Please try again.');
+    }
   };
 
   return (

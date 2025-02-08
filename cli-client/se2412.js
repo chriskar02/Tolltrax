@@ -7,10 +7,39 @@ const csv = require("csv-parser")
 const { Parser } = require("json2csv")
 
 const API_BASE_URL = "http://localhost:3000/api"
+const TOKEN_FILE = "token.json";
 
 // Helper function to format date
 function formatDate(date) {
   return date.replace(/-/g, "")
+}
+
+// Function to save JWT token
+function saveToken(token) {
+  fs.writeFileSync(TOKEN_FILE, JSON.stringify({ token }));
+}
+
+// Function to load JWT token (for authenticated requests)
+function loadToken() {
+  if (fs.existsSync(TOKEN_FILE)) {
+    return JSON.parse(fs.readFileSync(TOKEN_FILE)).token;
+  }
+  return null;
+}
+
+// Function to remove JWT token (logout)
+function removeToken() {
+  if (fs.existsSync(TOKEN_FILE)) {
+    fs.unlinkSync(TOKEN_FILE);
+  }
+}
+
+// Function to enforce login before executing commands
+function requireLogin() {
+  if (!fs.existsSync(TOKEN_FILE)) {
+      console.error("You must log in first! Use: node se2412.js login --username <username> --password <password>");
+      process.exit(1); 
+  }
 }
 
 // Helper function to write response in specified format
@@ -48,12 +77,44 @@ async function makeApiCall(method, endpoint, options = {}) {
 // Base program setup
 program.name("se2412").description("CLI for toll station management").version("1.0.0")
 
+// Login Command
+program
+  .command("login")
+  .description("Log in to the system")
+  .requiredOption("--username <username>", "Username")
+  .requiredOption("--password <password>", "Password")
+  .action(async (options) => {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/auth/login`, {
+        username: options.username,
+        password: options.password,
+      });
+
+      const token = response.data.token;
+      saveToken(token);
+
+      console.log("Login successful! Token saved.");
+    } catch (error) {
+      console.error("Login failed:", error.response?.data || error.message);
+    }
+  });
+
+// Logout Command
+program
+  .command("logout")
+  .description("Log out of the system")
+  .action(() => {
+    removeToken();
+    console.log("Logged out successfully.");
+  });
+
 // healthcheck command
 program
   .command("healthcheck")
   .description("Check system health")
   .option("--format <type>", "output format (json/csv)", "csv")
   .action(async (options) => {
+    requireLogin();
     try {
       const response = await makeApiCall("get", "/admin/healthcheck")
       await writeResponse(response, options.format)
@@ -68,6 +129,7 @@ program
   .description("Reset all passes")
   .option("--format <type>", "output format (json/csv)", "csv")
   .action(async (options) => {
+    requireLogin();
     try {
       const response = await makeApiCall("post", "/admin/resetpasses")
       console.log("Passes reset successfully")
@@ -83,6 +145,7 @@ program
   .description("Reset all stations")
   .option("--format <type>", "output format (json/csv)", "csv")
   .action(async (options) => {
+    requireLogin();
     try {
       const response = await makeApiCall("post", "/admin/resetstations")
       console.log("Stations reset successfully")
@@ -101,6 +164,7 @@ program
   .requiredOption("--to <date>", "end date (YYYYMMDD)")
   .option("--format <type>", "output format (json/csv)", "csv")
   .action(async (options) => {
+    requireLogin();
     try {
       const response = await makeApiCall("get", `/tollStationPasses/${options.station}/${options.from}/${options.to}`)
       await writeResponse(response, options.format)
@@ -119,6 +183,7 @@ program
   .requiredOption("--to <date>", "end date (YYYYMMDD)")
   .option("--format <type>", "output format (json/csv)", "csv")
   .action(async (options) => {
+    requireLogin();
     try {
       const response = await makeApiCall(
         "get",
@@ -140,6 +205,7 @@ program
   .requiredOption("--to <date>", "end date (YYYYMMDD)")
   .option("--format <type>", "output format (json/csv)", "csv")
   .action(async (options) => {
+    requireLogin();
     try {
       const response = await makeApiCall(
         "get",
@@ -160,6 +226,7 @@ program
   .requiredOption("--to <date>", "end date (YYYYMMDD)")
   .option("--format <type>", "output format (json/csv)", "csv")
   .action(async (options) => {
+    requireLogin();
     try {
       const response = await makeApiCall("get", `/chargesBy/${options.opid}/${options.from}/${options.to}`)
       await writeResponse(response, options.format)
@@ -179,6 +246,7 @@ program
   .option("--addpasses", "add passes from CSV")
   .option("--source <file>", "CSV file path")
   .action(async (options) => {
+    requireLogin();
     try {
       if (options.usermod) {
         if (!options.username || !options.passw) {
