@@ -37,7 +37,7 @@ function removeToken() {
 // Function to enforce login before executing commands
 function requireLogin() {
   if (!fs.existsSync(TOKEN_FILE)) {
-      console.error("You must log in first! Use: node se2412.js login --username <username> --password <password>");
+      console.error("You must log in first! Use: se2412 login --username <username> --password <password>");
       process.exit(1); 
   }
 }
