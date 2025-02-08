@@ -1,7 +1,7 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
-const { initializeDatabase } = require("./config/db"); // Import initializeDatabase
+const { initializeDatabase } = require("./routes/db"); // Import initializeDatabase
 
 const app = express();
 
@@ -27,7 +27,7 @@ initializeDatabase()
 
     const authenticateToken = require("./middleware/authMiddleware");
     app.get("/api/protected", authenticateToken, (req, res) => {
-        res.json({ message: "Welcome to a protected route!", user: req.user });
+      res.json({ message: "Welcome to a protected route!", user: req.user });
     });
 
     // Catch-all route for debugging

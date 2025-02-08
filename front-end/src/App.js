@@ -4,45 +4,45 @@ import Header from './components/Header';
 import Footer from './components/Footer';
 import Home from './pages/Home';
 import Admin from './pages/Admin';
-import Login from './components/Login'; // yiannis
+import Login from './components/Login';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false); // Track login state
 
   return (
-      <Router>
-        <div className="App">
-          <ConditionalHeader />
-          <Routes>
-            {/* Login Route */}
-            <Route
-                path="/"
-                element={
-                  isAuthenticated ? (
-                      <Navigate to="/home" replace />
-                  ) : (
-                      <Login setIsAuthenticated={setIsAuthenticated} />
-                  )
-                }
-            />
-            {/* Home Route */}
-            <Route
-                path="/home"
-                element={
-                  isAuthenticated ? <Home /> : <Navigate to="/" replace />
-                }
-            />
-            {/* Admin Route */}
-            <Route
-                path="/admin"
-                element={
-                  isAuthenticated ? <Admin /> : <Navigate to="/" replace />
-                }
-            />
-          </Routes>
-          <Footer />
-        </div>
-      </Router>
+    <Router>
+      <div className="App">
+        <ConditionalHeader />
+        <Routes>
+          {/* Login Route */}
+          <Route
+            path="/"
+            element={
+              isAuthenticated ? (
+                <Navigate to="/home" replace />
+              ) : (
+                <Login setIsAuthenticated={setIsAuthenticated} />
+              )
+            }
+          />
+          {/* Home Route */}
+          <Route
+            path="/home"
+            element={
+              isAuthenticated ? <Home /> : <Navigate to="/" replace />
+            }
+          />
+          {/* Admin Route */}
+          <Route
+            path="/admin"
+            element={
+              isAuthenticated ? <Admin /> : <Navigate to="/" replace />
+            }
+          />
+        </Routes>
+        <Footer />
+      </div>
+    </Router>
   );
 }
 

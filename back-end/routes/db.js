@@ -234,4 +234,4 @@ function dumpDatabase(dumpFilePath) {
 }
 
 // Export the initializeDatabase function for app.js and the pool for other routes
-module.exports = { initializeDatabase, getPool, dumpDatabase };
+module.exports = { initializeDatabase, getPool, dumpDatabase, populateUsers, populateVehicles };

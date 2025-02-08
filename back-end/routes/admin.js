@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { getPool, dumpDatabase } = require("./db");
+const { getPool, dumpDatabase, populateUsers, populateVehicles } = require("./db");
 const path = require("path");
 const fs = require("fs");
 const iconv = require("iconv-lite");
