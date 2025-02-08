@@ -3,6 +3,7 @@ const fs = require("fs");
 const csv = require("csv-parser");
 const path = require("path");
 const iconv = require("iconv-lite");
+const { exec } = require("child_process");
 
 let pool;
 
@@ -212,5 +213,25 @@ function getPool() {
   return pool;
 }
 
+//DB dump function
+function dumpDatabase(dumpFilePath) {
+  return new Promise((resolve, reject) => {
+    // Ensure the password is passed securely via the environment variable
+    const env = { ...process.env, PGPASSWORD: process.env.DB_PASSWORD };
+
+    // Construct the pg_dump command. The redirection operator (>) ensures the dump is written to the file.
+    const command = `pg_dump -U ${process.env.DB_USER} -h ${process.env.DB_HOST} -p ${process.env.DB_PORT} -d ${process.env.DB_NAME} > ${dumpFilePath}`;
+
+    exec(command, { env }, (error, stdout, stderr) => {
+      if (error) {
+        console.error("Error dumping database:", stderr);
+        return reject(error);
+      }
+      console.log("Database dump saved to", dumpFilePath);
+      resolve(dumpFilePath);
+    });
+  });
+}
+
 // Export the initializeDatabase function for app.js and the pool for other routes
-module.exports = { initializeDatabase, getPool };
+module.exports = { initializeDatabase, getPool, dumpDatabase };

@@ -1,0 +1,23 @@
+{
+    "answers": {
+        "phase": "coding",
+        "action": "code management",
+        "scope": "backend",
+        "action experience": 5,
+        "language": "js",
+        "other language": "<fill in>",
+        "aimodel": "chatgpt",
+        "aimodel version": "o3-mini",
+        "open source aimodel": "<fill in>",
+        "tool option": "online full",
+        "experience with tool": 5,
+        "time allocated (h)": "0.1",
+        "time saved estimate (h)": "0.5",
+        "quality of ai help": 5,
+        "knowledge acquired": 4,
+        "generic feeling - now": 5,
+        "generic feeling - future": 5,
+        "threat level": 0,
+        "notes": "<fill in>"
+    }
+}

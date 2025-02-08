@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { getPool } = require("./db");
+const { getPool, dumpDatabase } = require("./db");
 const path = require("path");
 const fs = require("fs");
 const iconv = require("iconv-lite");
@@ -228,6 +228,30 @@ router.post("/admin/resetvehicles", async (req, res) => {
         res.status(500).json({ status: "failed", info: err.message });
     }
 });
+
+// API endpoint for triggering a database dump
+router.post("/admin/dbdump", async (req, res) => {
+    try {
+        // Create a dump filename using a timestamp for uniqueness
+        const dumpFilePath = `dump_${Date.now()}.sql`;
+
+        await dumpDatabase(dumpFilePath);
+
+        res.status(200).json({
+            status: "OK",
+            message: "Database dump created successfully",
+            dumpFile: dumpFilePath,
+        });
+    } catch (error) {
+        console.error("Error during database dump:", error);
+        res.status(500).json({
+            status: "failed",
+            message: "Database dump failed",
+            error: error.message,
+        });
+    }
+});
+
 
 
 
