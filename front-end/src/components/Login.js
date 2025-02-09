@@ -1,9 +1,10 @@
+// src/components/Login.js
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Form, Button, Container, Row, Col, Alert } from 'react-bootstrap';
 import axios from 'axios';
 
-function Login({ setIsAuthenticated }) {
+function Login({ setIsAuthenticated, setUser }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -26,15 +27,22 @@ function Login({ setIsAuthenticated }) {
       });
 
       const token = response.data.token;
-      
       // Save token in localStorage
       localStorage.setItem('authToken', token);
 
-      // Update authentication state
-      setIsAuthenticated(true);
-
-      console.log("Login successful! Redirecting...");
-      navigate('/home');
+      // Optionally, verify the token immediately to get user info,
+      // or decode the token on the client side (if it is not encrypted)
+      const verifyResponse = await axios.get('http://localhost:3000/api/auth/verify-token', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      
+      if (verifyResponse.data.user) {
+        setUser(verifyResponse.data.user);
+        setIsAuthenticated(true);
+        navigate('/dashboard');
+      } else {
+        setError('Failed to verify token');
+      }
     } catch (error) {
       setError(error.response?.data?.error || 'Login failed. Please try again.');
     }
@@ -80,3 +88,4 @@ function Login({ setIsAuthenticated }) {
 }
 
 export default Login;
+

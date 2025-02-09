@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import axios from "axios";
 import { Container, Row, Col, Card, Button, Alert, Spinner } from "react-bootstrap";
+import axios from "axios";
 
-function Admin() {
+function AdminDashboard({ user }) {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
   const [healthData, setHealthData] = useState(null);
@@ -67,8 +67,8 @@ function Admin() {
 
   return (
     <Container className="admin-dashboard mt-5">
-      <h1 className="text-center mb-4">Admin Control Panel</h1>
-
+      <h1 className="text-center mb-4">Welcome, {user.username}</h1>
+      <h2 className="text-center mb-4">Admin Control Panel</h2>
       <Row className="mb-4">
         {adminActions.map((action, index) => (
           <Col key={index} md={3} sm={6} className="mb-2">
@@ -116,4 +116,4 @@ function Admin() {
   );
 }
 
-export default Admin;
+export default AdminDashboard;
