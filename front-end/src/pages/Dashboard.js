@@ -10,11 +10,10 @@ function Dashboard({ user, setIsAuthenticated }) {
       return <AdminDashboard user={user} />;
     case "analyst":
       return <AnalystDashboard user={user} setIsAuthenticated={setIsAuthenticated} />;
-    case "operator":
-      return <OperatorDashboard user={user} setIsAuthenticated={setIsAuthenticated} />;
     case "normal":
-    default:
       return <UserDashboard user={user} setIsAuthenticated={setIsAuthenticated} />;
+    default:
+      return <OperatorDashboard user={user} setIsAuthenticated={setIsAuthenticated} />;
   }
 }
 
