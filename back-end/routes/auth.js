@@ -87,14 +87,28 @@ function authenticateToken(req, res, next) {
     });
 }
 
+//Anyone that isn't normal, analyst or admin is operator
+function isOperator(userType) {
+    return !["admin", "analyst", "normal"].includes(userType);
+}
 
+// Middleware to check user roles
+// If allowedRoles includes "operator", then any user whose type qualifies as an operator will pass.
 function checkRole(allowedRoles) {
     return (req, res, next) => {
-        // Ensure req.user is populated (authenticateToken should run before this)
-        if (!req.user || !allowedRoles.includes(req.user.type)) {
+        if (!req.user) {
             return res.status(403).json({ error: "Access denied" });
         }
-        next();
+        const userType = req.user.type;
+        // Check if "operator" is allowed and the user is an operator based on their type.
+        if (allowedRoles.includes("operator") && isOperator(userType)) {
+            return next();
+        }
+        // Otherwise, check if the user's type exactly matches one of the allowed roles.
+        if (allowedRoles.includes(userType)) {
+            return next();
+        }
+        return res.status(403).json({ error: "Access denied" });
     };
 }
 
