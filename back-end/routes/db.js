@@ -58,7 +58,7 @@ async function initializeDatabase() {
       CREATE TABLE IF NOT EXISTS "user" (
         username VARCHAR(255) PRIMARY KEY,
         password VARCHAR(255) NOT NULL,
-        type INT NOT NULL
+        type VARCHAR(255) NOT NULL
       );
     `);
 
@@ -154,7 +154,7 @@ async function populateUsers(client) {
         `INSERT INTO "user" (username, password, type)
          VALUES ($1, $2, $3)
          ON CONFLICT (username) DO NOTHING`,
-        [user.username, user.password, parseInt(user.type)]
+        [user.username, user.password, user.type]
       );
     }
 
