@@ -1,0 +1,23 @@
+{
+    "answers": {
+        "phase": "testing",
+        "action": "problem understanding",
+        "scope": "api",
+        "action experience": 5,
+        "language": "n/a",
+        "other language": "<fill in>",
+        "aimodel": "chatgpt",
+        "aimodel version": "o3-mini",
+        "open source aimodel": "<fill in>",
+        "tool option": "online full",
+        "experience with tool": 5,
+        "time allocated (h)": "0.2",
+        "time saved estimate (h)": "0.3",
+        "quality of ai help": 5,
+        "knowledge acquired": 5,
+        "generic feeling - now": 5,
+        "generic feeling - future": 5,
+        "threat level": 0,
+        "notes": "<fill in>"
+    }
+}
