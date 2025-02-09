@@ -9,11 +9,6 @@ const { Parser } = require("json2csv")
 const API_BASE_URL = "http://localhost:3000/api"
 const TOKEN_FILE = "token.json";
 
-// Helper function to format date
-function formatDate(date) {
-  return date.replace(/-/g, "")
-}
-
 // Function to save JWT token
 function saveToken(token) {
   fs.writeFileSync(TOKEN_FILE, JSON.stringify({ token }));
@@ -37,7 +32,7 @@ function removeToken() {
 // Function to enforce login before executing commands
 function requireLogin() {
   if (!fs.existsSync(TOKEN_FILE)) {
-      console.error("You must log in first! Use: se2412 login --username <username> --password <password>");
+      console.error("You must log in first! Use: se2412 login --username <username> --passw <password>");
       process.exit(1); 
   }
 }
@@ -45,34 +40,24 @@ function requireLogin() {
 // Helper function to write response in specified format
 async function writeResponse(response, format = "csv") {
   if (format === "json") {
-    console.log(JSON.stringify(response.data, null, 2))
-  } else {
+    console.log(JSON.stringify(response.data));  // Ensures JSON is properly formatted
+  } else if (format === "csv") {
     try {
-      const parser = new Parser()
-      const csv = parser.parse(response.data)
-      console.log(csv)
+      if (typeof response.data === "object") {
+        const parser = new Parser();
+        const csv = parser.parse(response.data);
+        console.log(csv);
+      } else {
+        console.error("Error: Expected object for CSV conversion but got:", response.data);
+      }
     } catch (err) {
-      console.error("Error converting to CSV:", err.message)
+      console.error("Error converting to CSV:", err.message);
     }
+  } else {
+    console.error("Unsupported format:", format);
   }
 }
 
-// Helper function to handle API calls
-async function makeApiCall(method, endpoint, options = {}) {
-  console.log(`Making API call to ${endpoint}...`)
-  try {
-    const response = await axios({
-      method,
-      url: `${API_BASE_URL}${endpoint}`,
-      ...options,
-    })
-    console.log("API call successful")
-    return response
-  } catch (error) {
-    console.error("API call failed:", error.response?.data || error.message)
-    throw error
-  }
-}
 
 // Base program setup
 program.name("se2412").description("CLI for toll station management").version("1.0.0")
@@ -82,33 +67,31 @@ program
   .command("login")
   .description("Log in to the system")
   .requiredOption("--username <username>", "Username")
-  .requiredOption("--password <password>", "Password")
+  .requiredOption("--passw <password>", "Password")
   .action(async (options) => {
     try {
       const response = await axios.post(`${API_BASE_URL}/auth/login`, {
         username: options.username,
-        password: options.password,
+        password: options.passw,
       });
 
-      const token = response.data.token;
-      saveToken(token);
-
-      console.log("Login successful! Token saved.");
+      saveToken(response.data.token);
+      console.log(JSON.stringify(response.data, null, 2)); // Print the exact API response
     } catch (error) {
-      console.error("Login failed:", error.response?.data || error.message);
+      console.log(JSON.stringify(error.response?.data || { error: error.message }, null, 2)); // Print API error response
     }
   });
+
 
 // Logout Command
 program
   .command("logout")
   .description("Log out of the system")
   .action(() => {
-    removeToken();
-    console.log("Logged out successfully.");
+    removeToken();;
   });
 
-// healthcheck command
+// Healthcheck Command
 program
   .command("healthcheck")
   .description("Check system health")
@@ -116,14 +99,17 @@ program
   .action(async (options) => {
     requireLogin();
     try {
-      const response = await makeApiCall("get", "/admin/healthcheck")
-      await writeResponse(response, options.format)
-    } catch (error) {
-      console.error("Healthcheck failed:", error.message)
-    }
-  })
+      const response = await axios.get(`${API_BASE_URL}/admin/healthcheck`, {
+        headers: { Authorization: `Bearer ${loadToken()}` },
+      });
 
-// resetpasses command
+      await writeResponse(response, options.format); 
+    } catch (error) {
+      console.log(JSON.stringify(error.response?.data || { error: error.message }, null, 2)); 
+    }
+  });
+
+// Reset Passes Command
 program
   .command("resetpasses")
   .description("Reset all passes")
@@ -131,15 +117,17 @@ program
   .action(async (options) => {
     requireLogin();
     try {
-      const response = await makeApiCall("post", "/admin/resetpasses")
-      console.log("Passes reset successfully")
-      await writeResponse(response, options.format)
-    } catch (error) {
-      console.error("Reset passes failed:", error.message)
-    }
-  })
+      const response = await axios.post(`${API_BASE_URL}/admin/resetpasses`, {}, {
+        headers: { Authorization: `Bearer ${loadToken()}` },
+      });
 
-// resetstations command
+      await writeResponse(response, options.format); 
+    } catch (error) {
+      console.log(JSON.stringify(error.response?.data || { error: error.message }, null, 2)); 
+    }
+  });
+
+// Reset Stations Command
 program
   .command("resetstations")
   .description("Reset all stations")
@@ -147,15 +135,17 @@ program
   .action(async (options) => {
     requireLogin();
     try {
-      const response = await makeApiCall("post", "/admin/resetstations")
-      console.log("Stations reset successfully")
-      await writeResponse(response, options.format)
-    } catch (error) {
-      console.error("Reset stations failed:", error.message)
-    }
-  })
+      const response = await axios.post(`${API_BASE_URL}/admin/resetstations`, {}, {
+        headers: { Authorization: `Bearer ${loadToken()}` },
+      });
 
-// tollstationpasses command
+      await writeResponse(response, options.format); 
+    } catch (error) {
+      console.log(JSON.stringify(error.response?.data || { error: error.message }, null, 2)); 
+    }
+  });
+
+// Toll Station Passes Command
 program
   .command("tollstationpasses")
   .description("Get passes for a specific station")
@@ -166,14 +156,17 @@ program
   .action(async (options) => {
     requireLogin();
     try {
-      const response = await makeApiCall("get", `/tollStationPasses/${options.station}/${options.from}/${options.to}`)
-      await writeResponse(response, options.format)
-    } catch (error) {
-      console.error("Toll station passes retrieval failed:", error.message)
-    }
-  })
+      const response = await axios.get(`${API_BASE_URL}/tollStationPasses/${options.station}/${options.from}/${options.to}`, {
+        headers: { Authorization: `Bearer ${loadToken()}` },
+      });
 
-// passanalysis command
+      await writeResponse(response, options.format); 
+    } catch (error) {
+      console.log(JSON.stringify(error.response?.data || { error: error.message }, null, 2)); 
+    }
+  });
+
+// Pass Analysis Command
 program
   .command("passanalysis")
   .description("Analyze passes between operators")
@@ -185,17 +178,20 @@ program
   .action(async (options) => {
     requireLogin();
     try {
-      const response = await makeApiCall(
-        "get",
-        `/passAnalysis/${options.stationop}/${options.tagop}/${options.from}/${options.to}`,
-      )
-      await writeResponse(response, options.format)
-    } catch (error) {
-      console.error("Pass analysis failed:", error.message)
-    }
-  })
+      const response = await axios.get(
+        `${API_BASE_URL}/passAnalysis/${options.stationop}/${options.tagop}/${options.from}/${options.to}`,
+        {
+          headers: { Authorization: `Bearer ${loadToken()}` },
+        }
+      );
 
-// passescost command
+      await writeResponse(response, options.format); 
+    } catch (error) {
+      console.log(JSON.stringify(error.response?.data || { error: error.message }, null, 2)); 
+    }
+  });
+
+// Passes Cost Command
 program
   .command("passescost")
   .description("Get passes cost between operators")
@@ -207,17 +203,20 @@ program
   .action(async (options) => {
     requireLogin();
     try {
-      const response = await makeApiCall(
-        "get",
-        `/passesCost/${options.stationop}/${options.tagop}/${options.from}/${options.to}`,
-      )
-      await writeResponse(response, options.format)
-    } catch (error) {
-      console.error("Passes cost retrieval failed:", error.message)
-    }
-  })
+      const response = await axios.get(
+        `${API_BASE_URL}/passesCost/${options.stationop}/${options.tagop}/${options.from}/${options.to}`,
+        {
+          headers: { Authorization: `Bearer ${loadToken()}` },
+        }
+      );
 
-// chargesby command
+      await writeResponse(response, options.format); 
+    } catch (error) {
+      console.log(JSON.stringify(error.response?.data || { error: error.message }, null, 2)); 
+    }
+  });
+
+// Charges By Command
 program
   .command("chargesby")
   .description("Get charges by operator")
@@ -228,14 +227,21 @@ program
   .action(async (options) => {
     requireLogin();
     try {
-      const response = await makeApiCall("get", `/chargesBy/${options.opid}/${options.from}/${options.to}`)
-      await writeResponse(response, options.format)
-    } catch (error) {
-      console.error("Charges by operator retrieval failed:", error.message)
-    }
-  })
+      const response = await axios.get(
+        `${API_BASE_URL}/chargesBy/${options.opid}/${options.from}/${options.to}`,
+        {
+          headers: { Authorization: `Bearer ${loadToken()}` },
+        }
+      );
 
-// admin commands
+      await writeResponse(response, options.format); 
+    } catch (error) {
+      console.log(JSON.stringify(error.response?.data || { error: error.message }, null, 2)); 
+    }
+  });
+
+
+// Admin Commands
 program
   .command("admin")
   .description("Administrative commands")
@@ -248,38 +254,52 @@ program
   .action(async (options) => {
     requireLogin();
     try {
+      let response;
+
       if (options.usermod) {
         if (!options.username || !options.passw) {
-          throw new Error("Username and password required for usermod")
+          throw new Error("Username and password required for usermod");
         }
 
-        // Implement user modification logic here
-        console.log("User modified successfully")
+        response = await axios.post(
+          `${API_BASE_URL}/admin/usermod`,
+          {
+            username: options.username,
+            password: options.passw,
+          },
+          {
+            headers: { Authorization: `Bearer ${loadToken()}` },
+          }
+        );
       } else if (options.users) {
-        // Implement user listing logic here
-        console.log("User list:")
+        response = await axios.get(`${API_BASE_URL}/admin/users`, {
+          headers: { Authorization: `Bearer ${loadToken()}` },
+        });
       } else if (options.addpasses) {
         if (!options.source) {
-          throw new Error("Source file required for addpasses")
+          throw new Error("Source file required for addpasses");
         }
-        const response = await makeApiCall("post", "/admin/addpasses", {
-          data: { source: options.source },
-        })
-        console.log("Passes added successfully")
+
+        response = await axios.post(
+          `${API_BASE_URL}/admin/addpasses`,
+          { source: options.source },
+          {
+            headers: { Authorization: `Bearer ${loadToken()}` },
+          }
+        );
+      }
+
+      if (response) {
+        console.log(JSON.stringify(response.data, null, 2)); 
       }
     } catch (error) {
-      console.error("Admin command failed:", error.message)
+      console.log(JSON.stringify(error.response?.data || { error: error.message }, null, 2)); 
     }
-  })
+  });
+
 
 // Ensure the program doesn't exit before async operations complete
 program
   .parseAsync(process.argv)
-  .then(() => {
-    console.log("Command execution completed")
-  })
-  .catch((error) => {
-    console.error("An error occurred:", error)
-    process.exit(1)
-  })
+  .catch(() => process.exit(1));
 
