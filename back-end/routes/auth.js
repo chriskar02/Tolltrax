@@ -2,9 +2,9 @@ const express = require("express");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { getPool } = require("./db");
-
 const router = express.Router();
-const SECRET_KEY = process.env.JWT_SECRET || "your_secret_key";
+
+const SECRET_KEY = process.env.JWT_SECRET;
 
 // User Login
 router.post("/login", async (req, res) => {
@@ -34,7 +34,7 @@ router.post("/login", async (req, res) => {
         const token = jwt.sign(
             { username: user.username, type: user.type },
             SECRET_KEY,
-            { expiresIn: process.env.JWT_EXPIRATION || "2h" }
+            { expiresIn: process.env.JWT_EXPIRATION }
         );
 
         return res.json({ token });
@@ -66,4 +66,36 @@ router.post("/logout", (req, res) => {
     return res.status(200).json({ message: "Logged out successfully" });
 });
 
-module.exports = router;
+
+//Middleware auth functions
+
+function authenticateToken(req, res, next) {
+    const authHeader = req.headers["authorization"];
+    // Expecting header in the format "Bearer <token>"
+    const token = authHeader && authHeader.split(" ")[1];
+
+    if (!token) {
+        return res.status(401).json({ error: "Authentication token required" });
+    }
+
+    jwt.verify(token, SECRET_KEY, (err, decoded) => {
+        if (err) {
+            return res.status(403).json({ error: "Invalid or expired token" });
+        }
+        req.user = decoded; // decoded token should include at least username and type
+        next();
+    });
+}
+
+
+function checkRole(allowedRoles) {
+    return (req, res, next) => {
+        // Ensure req.user is populated (authenticateToken should run before this)
+        if (!req.user || !allowedRoles.includes(req.user.type)) {
+            return res.status(403).json({ error: "Access denied" });
+        }
+        next();
+    };
+}
+
+module.exports = { router, authenticateToken, checkRole };
