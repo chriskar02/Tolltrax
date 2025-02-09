@@ -5,18 +5,17 @@ import OperatorDashboard from './OperatorDashboard';
 import UserDashboard from './UserDashboard';
 
 function Dashboard({ user, setIsAuthenticated }) {
-  // You can customize the following switch however you wish
   switch (user.type) {
-    case 3:
+    case "admin":
       return <AdminDashboard user={user} />;
-    case 2:
+    case "analyst":
       return <AnalystDashboard user={user} setIsAuthenticated={setIsAuthenticated} />;
-    case 1:
-      return <OperatorDashboard user={user} setIsAuthenticated={setIsAuthenticated} />;
-    case 0:
-    default:
+    case "normal":
       return <UserDashboard user={user} setIsAuthenticated={setIsAuthenticated} />;
+    default:
+      return <OperatorDashboard user={user} setIsAuthenticated={setIsAuthenticated} />;
   }
 }
+
 
 export default Dashboard;
