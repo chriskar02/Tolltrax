@@ -107,68 +107,141 @@ router.post("/admin/resetpasses", async (req, res) => {
     }
 });
 
-// Add passes
-router.post("/admin/addpasses", async (req, res) => {
-    try {
-        let newPasses = 0;
-
-        await runTransaction(async (client) => {
-            const csvPath = path.join(__dirname, "..", "data", "passes-sample.csv");
-            const passes = [];
-
-            await new Promise((resolve, reject) => {
-                fs.createReadStream(csvPath)
-                    .pipe(iconv.decodeStream("UTF-8"))
-                    .pipe(csv())
-                    .on("data", (row) => passes.push(row))
-                    .on("end", resolve)
-                    .on("error", reject);
-            });
-
-            // Insert transceivers from dummy data
-            const transceiversPath = path.join(__dirname, "..", "dummy_data", "transceiver.csv");
-            const transceivers = [];
-
-            await new Promise((resolve, reject) => {
-                fs.createReadStream(transceiversPath)
-                    .pipe(csv())
-                    .on("data", (row) => transceivers.push(row))
-                    .on("end", resolve)
-                    .on("error", reject);
-            });
-
-            for (const t of transceivers) {
-                await client.query(
-                    `INSERT INTO transceiver (id, vehicleid, operatorid, balance, active)
-           VALUES ($1, $2, $3, $4, $5)
-           ON CONFLICT (id) DO NOTHING`,
-                    [t.id, t.vehicleid, t.operatorid, t.balance, t.active === "True"]
-                );
-            }
-
-            // Insert passes
-            for (const pass of passes) {
-                const result = await client.query(
-                    `INSERT INTO passthrough (timestamp, tollid, transceiverid, charge)
-           VALUES ($1, $2, $3, $4)
-           ON CONFLICT DO NOTHING`,
-                    [
-                        pass.timestamp,
-                        pass.tollID,
-                        pass.tagRef,
-                        pass.charge
-                    ]
-                );
-                if (result.rowCount > 0) newPasses++;
-            }
-        });
-
-        res.json({ status: "OK", newPasses });
-    } catch (err) {
-        console.error("Add passes error:", err);
-        res.status(500).json({ status: "failed", info: err.message });
+// Helper function to normalize a CSV row:
+function normalizeRow(row) {
+    const normalized = {};
+    for (const key in row) {
+      // Convert keys to lowercase and trim both key and value.
+      normalized[key.trim().toLowerCase()] = (row[key] || "").trim();
     }
-});
+    return normalized;
+  }
+  
+  // Add passes and compute debt settlements
+  router.post("/admin/addpasses", async (req, res) => {
+    try {
+      let newPasses = 0;
+  
+      await runTransaction(async (client) => {
+        // 1. Load passes from CSV and normalize rows
+        const passesCsvPath = path.join(__dirname, "..", "data", "passes-sample.csv");
+        const passes = [];
+        await new Promise((resolve, reject) => {
+          fs.createReadStream(passesCsvPath)
+            .pipe(iconv.decodeStream("UTF-8"))
+            .pipe(csv())
+            .on("data", (row) => passes.push(normalizeRow(row)))
+            .on("end", resolve)
+            .on("error", reject);
+        });
+  
+        // 2. Load transceivers from CSV (dummy data) and normalize rows
+        const transceiversCsvPath = path.join(__dirname, "..", "dummy_data", "transceiver.csv");
+        const transceivers = [];
+        await new Promise((resolve, reject) => {
+          fs.createReadStream(transceiversCsvPath)
+            .pipe(iconv.decodeStream("UTF-8"))
+            .pipe(csv())
+            .on("data", (row) => transceivers.push(normalizeRow(row)))
+            .on("end", resolve)
+            .on("error", reject);
+        });
+  
+        // 3. Insert transceivers into the database.
+        // We use the normalized 'providerid' as the operator id.
+        for (const t of transceivers) {
+          await client.query(
+            `INSERT INTO transceiver (id, vehicleid, operatorid, balance, active)
+             VALUES ($1, $2, $3, $4, $5)
+             ON CONFLICT (id) DO NOTHING`,
+            [
+              t.id, 
+              t.vehicleid, 
+              t.providerid, // already trimmed and lowercased
+              t.balance, 
+              t.active === "true"
+            ]
+          );
+        }
+  
+        // 4. Insert passes into the database.
+        // Note that after normalization, the keys are lowercase.
+        for (const pass of passes) {
+          const result = await client.query(
+            `INSERT INTO passthrough (timestamp, tollid, transceiverid, charge)
+             VALUES ($1, $2, $3, $4)
+             ON CONFLICT DO NOTHING`,
+            [
+              pass.timestamp,
+              pass.tollid,
+              pass.tagref, // normalized tagRef becomes tagref
+              pass.charge
+            ]
+          );
+          if (result.rowCount > 0) newPasses++;
+        }
+  
+        // 5. Load toll stations from CSV and normalize rows
+        const tollstationsCsvPath = path.join(__dirname, "..", "data", "tollstations2024.csv");
+        const tollstations = [];
+        await new Promise((resolve, reject) => {
+          fs.createReadStream(tollstationsCsvPath)
+            .pipe(iconv.decodeStream("UTF-8"))
+            .pipe(csv())
+            .on("data", (row) => tollstations.push(normalizeRow(row)))
+            .on("end", resolve)
+            .on("error", reject);
+        });
+  
+        // 6. Compute settlement records.
+        // For each pass, we look up the matching transceiver and toll station.
+        // We use the transceiver’s providerid as the payer and the toll station’s opid as the payee.
+        const settlements = {}; // key: "payer_payee"
+        for (const pass of passes) {
+          // Find the transceiver using normalized tagref
+          const transceiver = transceivers.find(t => t.id === pass.tagref);
+          if (!transceiver) continue;
+  
+          // Find the toll station using normalized tollid
+          const tollStation = tollstations.find(ts => ts.tollid === pass.tollid);
+          if (!tollStation) continue;
+  
+          // Extract payer and payee from normalized values.
+          const payer = transceiver.providerid; // e.g. "nao"
+          const payee = tollStation.opid;         // e.g. "am", "no", etc.
+          // Only create a settlement if both values exist and they differ.
+          if (payer && payee && payer !== payee) {
+            const key = `${payer}_${payee}`;
+            const charge = parseFloat(pass.charge) || 0;
+            if (!settlements[key]) {
+              settlements[key] = { payer, payee, amount: 0 };
+            }
+            settlements[key].amount += charge;
+          }
+        }
+  
+        // 7. Insert settlement records into the debt_settlement table.
+        for (const key in settlements) {
+          const settlement = settlements[key];
+          await client.query(
+            `INSERT INTO debt_settlement (payer, payee, amount, date, complete)
+             VALUES ($1, $2, $3, $4, $5)
+             ON CONFLICT DO NOTHING`,
+            [settlement.payer, settlement.payee, settlement.amount, new Date(), false]
+          );
+        }
+      });
+  
+      res.json({ status: "OK", newPasses });
+    } catch (err) {
+      console.error("Add passes error:", err);
+      res.status(500).json({ status: "failed", info: err.message });
+    }
+  });
+  
+
+
+
 
 //Healthcheck
 router.get("/admin/healthcheck", async (req, res) => {
