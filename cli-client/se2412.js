@@ -77,8 +77,10 @@ program
 
       saveToken(response.data.token);
       console.log(JSON.stringify(response.data, null, 2)); // Print the exact API response
+      process.exit(0);
     } catch (error) {
       console.log(JSON.stringify(error.response?.data || { error: error.message }, null, 2)); // Print API error response
+      process.exit(1);
     }
   });
 

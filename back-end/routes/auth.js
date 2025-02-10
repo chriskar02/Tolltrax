@@ -11,7 +11,7 @@ router.post("/login", async (req, res) => {
     const { username, password } = req.body;
 
     if (!username || !password) {
-        return res.status(400).json({ error: "Username and password are required" });
+        return res.status(400).json({ status: "failed", info: "Username and password required" });
     }
 
     try {
@@ -19,7 +19,7 @@ router.post("/login", async (req, res) => {
         const result = await pool.query(`SELECT * FROM "user" WHERE username = $1`, [username]);
 
         if (result.rowCount === 0) {
-            return res.status(401).json({ error: "Invalid username or password" });
+            return res.status(401).json({ status: "failed", info: "Invalid username or password" });
         }
 
         const user = result.rows[0];
@@ -27,22 +27,23 @@ router.post("/login", async (req, res) => {
         // Compare hashed password
         const validPassword = await bcrypt.compare(password, user.password);
         if (!validPassword) {
-            return res.status(401).json({ error: "Invalid username or password" });
+            return res.status(401).json({ status: "failed", info: "Invalid username or password" });
         }
 
         // Generate JWT Token
         const token = jwt.sign(
             { username: user.username, type: user.type },
             SECRET_KEY,
-            { expiresIn: process.env.JWT_EXPIRATION }
+            { expiresIn: process.env.JWT_EXPIRATION || "2h" } 
         );
 
-        return res.json({ token });
+        return res.json({ status: "OK", token });
     } catch (error) {
         console.error("Login error:", error);
-        return res.status(500).json({ error: "Internal server error" });
+        return res.status(500).json({ status: "failed", info: "Internal server error" });
     }
 });
+
 
 // Verify Token
 router.get("/verify-token", (req, res) => {
