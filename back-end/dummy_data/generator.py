@@ -211,7 +211,7 @@ def allocate_transceivers(transceivers, normal_users):
         transceiver_records.append({
             "id": tag_ref,
             "vehicleid": license_plate,
-            "providerid": tag_home_id,
+            "operatorid": tag_home_id,
             "balance": balance,
             "active": status
         })
@@ -245,7 +245,7 @@ def main():
     # Write output CSV files.
     save_users_csv(all_users)
     write_csv(vehicles, ["license_plate", "license_year", "type", "model", "userid"], filename="vehicles.csv")
-    write_csv(transceiver_records, ["id", "vehicleid", "providerid", "balance", "active"], filename="transceiver.csv")
+    write_csv(transceiver_records, ["id", "vehicleid", "operatorid", "balance", "active"], filename="transceiver.csv")
 
 if __name__ == "__main__":
     main()
