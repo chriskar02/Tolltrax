@@ -4,7 +4,9 @@ import { useLocation, BrowserRouter as Router, Route, Routes, Navigate } from 'r
 import Header from './components/Header';
 import Footer from './components/Footer';
 import Login from './components/Login';
-import Dashboard from './pages/Dashboard'; // Component that selects the correct dashboard based on role
+import Dashboard from './pages/Dashboard'; // Parent Dashboard that handles role-based nested routing
+import NormalUserPassesDashboard from './pages/NormalUserPassesDashboard';
+import NormalUserBalanceDashboard from './pages/NormalUserBalanceDashboard';
 import axios from 'axios';
 
 function App() {
@@ -63,13 +65,23 @@ function App() {
             }
           />
           <Route
-            path="/dashboard"
+            path="/dashboard/*"
             element={
               isAuthenticated && user
                 ? <Dashboard user={user} setIsAuthenticated={setIsAuthenticated} setUser={setUser} />
                 : <Navigate to="/" replace />
             }
-          />
+          >
+            {/* Nested routes for normal users */}
+            {user && user.type === "normal" && (
+              <>
+                <Route path="passes" element={<NormalUserPassesDashboard />} />
+                <Route path="balance" element={<NormalUserBalanceDashboard />} />
+                <Route index element={<div className="text-center">Select an option above.</div>} />
+              </>
+            )}
+            {/* Additional nested routes for other user types can be added here */}
+          </Route>
         </Routes>
         <Footer />
       </div>
