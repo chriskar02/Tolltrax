@@ -157,7 +157,7 @@ function normalizeRow(row) {
             [
               t.id, 
               t.vehicleid, 
-              t.providerid, // already trimmed and lowercased
+              t.operatorid, // already trimmed and lowercased
               t.balance, 
               t.active === "true"
             ]
@@ -207,7 +207,7 @@ function normalizeRow(row) {
           if (!tollStation) continue;
   
           // Extract payer and payee from normalized values.
-          const payer = transceiver.providerid; // e.g. "nao"
+          const payer = transceiver.operatorid; // e.g. "nao"
           const payee = tollStation.opid;         // e.g. "am", "no", etc.
           // Only create a settlement if both values exist and they differ.
           if (payer && payee && payer !== payee) {
