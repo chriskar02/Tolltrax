@@ -1,0 +1,520 @@
+{
+    "info": {
+        "name": "Tollway System API Collection",
+        "_postman_id": "c5a6b334-2f5d-4d60-a8e1-8f4f0b8d1e2e",
+        "description": "API endpoints for authentication, admin operations, and passes as defined in the backend.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Authentication",
+            "item": [
+                {
+                    "name": "Login",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/x-www-form-urlencoded"
+                            }
+                        ],
+                        "body": {
+                            "mode": "urlencoded",
+                            "urlencoded": [
+                                {
+                                    "key": "username",
+                                    "value": "your_username",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "password",
+                                    "value": "your_password",
+                                    "type": "text"
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/login",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "login"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Verify Token",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "X-OBSERVATORY-AUTH",
+                                "value": "Bearer {{token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/verify-token",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "verify-token"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Logout",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "X-OBSERVATORY-AUTH",
+                                "value": "Bearer {{token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/logout",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "logout"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Admin",
+            "item": [
+                {
+                    "name": "Reset Stations",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "X-OBSERVATORY-AUTH",
+                                "value": "Bearer {{token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/admin/resetstations",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "resetstations"
+                            ],
+                            "query": [
+                                {
+                                    "key": "format",
+                                    "value": "json"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Reset Passes",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "X-OBSERVATORY-AUTH",
+                                "value": "Bearer {{token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/admin/resetpasses",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "resetpasses"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Add Passes",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "X-OBSERVATORY-AUTH",
+                                "value": "Bearer {{token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/admin/addpasses",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "addpasses"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Healthcheck",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "X-OBSERVATORY-AUTH",
+                                "value": "Bearer {{token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/admin/healthcheck?format=json",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "healthcheck"
+                            ],
+                            "query": [
+                                {
+                                    "key": "format",
+                                    "value": "json"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Reset Users",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "X-OBSERVATORY-AUTH",
+                                "value": "Bearer {{token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/admin/resetusers",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "resetusers"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Reset Vehicles",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "X-OBSERVATORY-AUTH",
+                                "value": "Bearer {{token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/admin/resetvehicles",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "resetvehicles"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Database Dump",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "X-OBSERVATORY-AUTH",
+                                "value": "Bearer {{token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/admin/dbdump",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "dbdump"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Modify User",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "X-OBSERVATORY-AUTH",
+                                "value": "Bearer {{token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"username\": \"newuser\",\n  \"password\": \"newpass\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/admin/usermod",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "usermod"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "List Users",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "X-OBSERVATORY-AUTH",
+                                "value": "Bearer {{token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/admin/users",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "users"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Check Admin Status",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/admin/checkAdminStatus",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "checkAdminStatus"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Passes",
+            "item": [
+                {
+                    "name": "Toll Station Passes",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "X-OBSERVATORY-AUTH",
+                                "value": "Bearer {{token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/tollStationPasses/{{tollStationID}}/{{date_from}}/{{date_to}}?format=json",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "tollStationPasses",
+                                "{{tollStationID}}",
+                                "{{date_from}}",
+                                "{{date_to}}"
+                            ],
+                            "query": [
+                                {
+                                    "key": "format",
+                                    "value": "json"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Pass Analysis",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "X-OBSERVATORY-AUTH",
+                                "value": "Bearer {{token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/passAnalysis/{{stationOpID}}/{{tagOpID}}/{{date_from}}/{{date_to}}?format=json",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "passAnalysis",
+                                "{{stationOpID}}",
+                                "{{tagOpID}}",
+                                "{{date_from}}",
+                                "{{date_to}}"
+                            ],
+                            "query": [
+                                {
+                                    "key": "format",
+                                    "value": "json"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Passes Cost",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "X-OBSERVATORY-AUTH",
+                                "value": "Bearer {{token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/passesCost/{{tollOpID}}/{{tagOpID}}/{{date_from}}/{{date_to}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "passesCost",
+                                "{{tollOpID}}",
+                                "{{tagOpID}}",
+                                "{{date_from}}",
+                                "{{date_to}}"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Charges By",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "X-OBSERVATORY-AUTH",
+                                "value": "Bearer {{token}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/chargesBy/{{tollOpID}}/{{date_from}}/{{date_to}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "chargesBy",
+                                "{{tollOpID}}",
+                                "{{date_from}}",
+                                "{{date_to}}"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        }
+    ],
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "http://localhost:9115/api"
+        },
+        {
+            "key": "token",
+            "value": ""
+        },
+        {
+            "key": "tollStationID",
+            "value": "station1"
+        },
+        {
+            "key": "date_from",
+            "value": "20240101"
+        },
+        {
+            "key": "date_to",
+            "value": "20240131"
+        },
+        {
+            "key": "stationOpID",
+            "value": "operator1"
+        },
+        {
+            "key": "tagOpID",
+            "value": "operator2"
+        },
+        {
+            "key": "tollOpID",
+            "value": "operator1"
+        }
+    ]
+}
