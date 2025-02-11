@@ -26,12 +26,46 @@ function formatDate(dateString) {
   return `${dateString.slice(0, 4)}-${dateString.slice(4, 6)}-${dateString.slice(6, 8)}`;
 }
 
-function handleError(res, error) {
-  console.error(error);
-  res.status(500).json({
-    status: "failed",
-    info: error.message
-  });
+// Utility function to format response
+function formatResponse(req, res, data, statusCode = 200) {
+  const format = req.query.format || "json";
+  res.status(statusCode); 
+
+  if (format === "csv") {
+      res.setHeader("Content-Type", "text/csv");
+
+      if (Array.isArray(data)) {
+          if (data.length === 0) {
+              return res.send("");
+          }
+
+          const headers = Object.keys(data[0]);
+          const csvRows = data.map(row => headers.map(field => JSON.stringify(row[field] || "")).join(","));
+
+          res.send([headers.join(","), ...csvRows].join("\n"));
+      } else if (typeof data === "object" && data !== null) {
+          // **Flatten nested objects before converting to CSV**
+          function flattenObject(obj, prefix = "") {
+              return Object.keys(obj).reduce((acc, key) => {
+                  const newKey = prefix ? `${prefix}_${key}` : key;
+                  if (typeof obj[key] === "object" && obj[key] !== null) {
+                      Object.assign(acc, flattenObject(obj[key], newKey));
+                  } else {
+                      acc[newKey] = obj[key];
+                  }
+                  return acc;
+              }, {});
+          }
+
+          const flatData = flattenObject(data);
+          const csvString = Object.keys(flatData).join(",") + "\n" + Object.values(flatData).join(",");
+          res.send(csvString);
+      } else {
+          res.send(String(data));
+      }
+  } else {
+      res.json(data);
+  }
 }
 
 // a. Toll Station Passes Endpoint
@@ -67,7 +101,7 @@ router.get("/tollStationPasses/:tollStationID/:date_from/:date_to", async (req, 
         [tollStationID, formatDate(date_from), formatDate(date_to)]
       );
 
-      res.json({
+      formatResponse(req, res, {
         stationID: tollStationID,
         stationOperator: stationQuery.rows[0].operatorid,
         requestTimestamp: new Date().toISOString().slice(0, 16).replace("T", " "),
@@ -86,7 +120,7 @@ router.get("/tollStationPasses/:tollStationID/:date_from/:date_to", async (req, 
       });
     });
   } catch (error) {
-    handleError(res, error);
+    formatResponse(req, res, { status: "failed", info: error.message }, 500);
   }
 });
 
@@ -107,7 +141,7 @@ router.get("/passAnalysis/:stationOpID/:tagOpID/:date_from/:date_to", async (req
         [stationOpID, tagOpID, formatDate(date_from), formatDate(date_to)]
       );
 
-      res.json({
+      formatResponse(req, res, {
         stationOpID: stationOpID,
         tagOpID: tagOpID,
         requestTimestamp: new Date().toISOString().slice(0, 16).replace("T", " "),
@@ -125,7 +159,7 @@ router.get("/passAnalysis/:stationOpID/:tagOpID/:date_from/:date_to", async (req
       });
     });
   } catch (error) {
-    handleError(res, error);
+    formatResponse(req, res, { status: "failed", info: error.message }, 500);
   }
 });
 
@@ -146,7 +180,7 @@ router.get("/passesCost/:tollOpID/:tagOpID/:date_from/:date_to", async (req, res
       );
 
       const { pass_count, total_cost } = result.rows[0];
-      res.json({
+      formatResponse(req, res, {
         tollOpID: tollOpID,
         tagOpID: tagOpID,
         requestTimestamp: new Date().toISOString().slice(0, 16).replace("T", " "),
@@ -157,7 +191,7 @@ router.get("/passesCost/:tollOpID/:tagOpID/:date_from/:date_to", async (req, res
       });
     });
   } catch (error) {
-    handleError(res, error);
+    formatResponse(req, res, { status: "failed", info: error.message }, 500);
   }
 });
 
@@ -180,7 +214,7 @@ router.get("/chargesBy/:tollOpID/:date_from/:date_to", async (req, res) => {
         [tollOpID, formatDate(date_from), formatDate(date_to)]
       );
 
-      res.json({
+      formatResponse(req, res, {
         tollOpID: tollOpID,
         requestTimestamp: new Date().toISOString().slice(0, 16).replace("T", " "),
         periodFrom: formatDate(date_from),
@@ -193,7 +227,7 @@ router.get("/chargesBy/:tollOpID/:date_from/:date_to", async (req, res) => {
       });
     });
   } catch (error) {
-    handleError(res, error);
+    formatResponse(req, res, { status: "failed", info: error.message }, 500);
   }
 });
 
