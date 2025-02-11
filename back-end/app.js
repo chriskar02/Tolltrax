@@ -18,18 +18,13 @@ initializeDatabase()
 
     // Register routes only after DB initialization
     const { router: authRoutes } = require("./routes/auth");
-    app.use("/api/auth", authRoutes);
+    app.use("/", authRoutes);
 
     const passesRoutes = require("./routes/passes");
-    app.use("/api", passesRoutes);
+    app.use("/", passesRoutes);
 
     const adminRoutes = require("./routes/admin");
-    app.use("/api", adminRoutes);
-
-    const authenticateToken = require("./middleware/authMiddleware");
-    app.get("/api/protected", authenticateToken, (req, res) => {
-      res.json({ message: "Welcome to a protected route!", user: req.user });
-    });
+    app.use("/", adminRoutes);
 
     // Catch-all route for debugging
     app.use("*", (req, res) => {

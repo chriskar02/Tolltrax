@@ -2,11 +2,12 @@
 
 const { program } = require("commander")
 const axios = require("axios")
+const { checkRole } = require("../back-end/routes/auth");
 const fs = require("fs")
-const csv = require("csv-parser")
-const { Parser } = require("json2csv")
+const jwt = require("jsonwebtoken");
+require("dotenv").config({ path: "../back-end/.env" });
 
-const API_BASE_URL = "http://localhost:3000/api"
+const API_BASE_URL = "http://localhost:3000"
 const TOKEN_FILE = "token.json"
 
 // Function to save JWT token
@@ -31,24 +32,40 @@ function removeToken() {
 
 // Function to enforce login before executing commands
 function requireLogin() {
-  if (!fs.existsSync(TOKEN_FILE)) {
+  const token = loadToken();
+  if (!token) {
     console.error("You must log in first! Use: se2412 login --username <username> --passw <password>")
     process.exit(1)
   }
 }
 
-// Function to check if the user is an admin
-async function isAdmin() {
+function requireAdmin() {
+  // Ensure the user is logged in
+  requireLogin();
+  const token = loadToken();
   try {
-    const response = await axios.get(`${API_BASE_URL}/admin/checkAdminStatus`, {
-      headers: { Authorization: `Bearer ${loadToken()}` },
-    })
-    return response.data.isAdmin
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    let roleAllowed = false;
+    // Create a minimal request object containing the decoded user payload.
+    const req = { user: decoded };
+    // Create a dummy response object (not used further but required by checkRole)
+    const res = { status: () => ({ json: () => { } }) };
+    // The next function will be called only if checkRole passes.
+    const next = () => {
+      roleAllowed = true;
+    };
+    // Execute the checkRole middleware with the allowed role "admin"
+    checkRole(["admin"])(req, res, next);
+    if (!roleAllowed) {
+      console.error("Insufficient privileges: You must be logged in as an admin.");
+      process.exit(1);
+    }
   } catch (error) {
-    console.error("Error checking admin status:", error.message)
-    return false
+    console.error("Error verifying admin privileges: " + error.message);
+    process.exit(1);
   }
 }
+
 
 // Base program setup
 program.name("se2412").description("CLI for toll station management").version("1.0.0")
@@ -61,7 +78,7 @@ program
   .requiredOption("--passw <password>", "Password")
   .action(async (options) => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/auth/login`, {
+      const response = await axios.post(`${API_BASE_URL}/login`, {
         username: options.username,
         password: options.passw,
       })
@@ -89,11 +106,7 @@ program
   .description("Check system health")
   .option("--format <type>", "output format (json/csv)", "csv")
   .action(async (options) => {
-    requireLogin()
-    if (!(await isAdmin())) {
-      console.error("You must be an admin to use this command.")
-      process.exit(1)
-    }
+    requireAdmin()
     try {
       const response = await axios.get(`${API_BASE_URL}/admin/healthcheck?format=${options.format}`, {
         headers: { Authorization: `Bearer ${loadToken()}` },
@@ -111,11 +124,7 @@ program
   .description("Reset all passes")
   .option("--format <type>", "output format (json/csv)", "csv")
   .action(async (options) => {
-    requireLogin()
-    if (!(await isAdmin())) {
-      console.error("You must be an admin to use this command.")
-      process.exit(1)
-    }
+    requireAdmin()
     try {
       const response = await axios.post(
         `${API_BASE_URL}/admin/resetpasses?format=${options.format}`,
@@ -137,11 +146,7 @@ program
   .description("Reset all stations")
   .option("--format <type>", "output format (json/csv)", "csv")
   .action(async (options) => {
-    requireLogin()
-    if (!(await isAdmin())) {
-      console.error("You must be an admin to use this command.")
-      process.exit(1)
-    }
+    requireAdmin()
     try {
       const response = await axios.post(
         `${API_BASE_URL}/admin/resetstations?format=${options.format}`,
@@ -263,11 +268,7 @@ program
   .option("--addpasses", "add passes from CSV")
   .option("--source <file>", "CSV file path")
   .action(async (options) => {
-    requireLogin()
-    if (!(await isAdmin())) {
-      console.error("You must be an admin to use this command.")
-      process.exit(1)
-    }
+    requireAdmin()
     try {
       let response
 

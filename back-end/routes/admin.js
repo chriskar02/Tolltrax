@@ -8,8 +8,12 @@ const csv = require("csv-parser")
 const bcrypt = require("bcrypt")
 const saltRounds = 10
 const jwt = require("jsonwebtoken")
+const { authenticateToken, checkRole } = require("./auth");
 
 const pool = getPool() // Get the shared pool instance
+
+router.use(authenticateToken);
+router.use(checkRole(["admin"])); //extra layer of security to limit admin api calls to logged in admins
 
 // Helper function for transactions
 async function runTransaction(callback) {
@@ -28,44 +32,44 @@ async function runTransaction(callback) {
 
 // Utility function to format response
 function formatResponse(req, res, data, statusCode = 200) {
-    const format = req.query.format || "json";
-    res.status(statusCode); 
+  const format = req.query.format || "json";
+  res.status(statusCode);
 
-    if (format === "csv") {
-        res.setHeader("Content-Type", "text/csv");
+  if (format === "csv") {
+    res.setHeader("Content-Type", "text/csv");
 
-        if (Array.isArray(data)) {
-            if (data.length === 0) {
-                return res.send("");
-            }
+    if (Array.isArray(data)) {
+      if (data.length === 0) {
+        return res.send("");
+      }
 
-            const headers = Object.keys(data[0]);
-            const csvRows = data.map(row => headers.map(field => JSON.stringify(row[field] || "")).join(","));
+      const headers = Object.keys(data[0]);
+      const csvRows = data.map(row => headers.map(field => JSON.stringify(row[field] || "")).join(","));
 
-            res.send([headers.join(","), ...csvRows].join("\n"));
-        } else if (typeof data === "object" && data !== null) {
-            // **Flatten nested objects before converting to CSV**
-            function flattenObject(obj, prefix = "") {
-                return Object.keys(obj).reduce((acc, key) => {
-                    const newKey = prefix ? `${prefix}_${key}` : key;
-                    if (typeof obj[key] === "object" && obj[key] !== null) {
-                        Object.assign(acc, flattenObject(obj[key], newKey));
-                    } else {
-                        acc[newKey] = obj[key];
-                    }
-                    return acc;
-                }, {});
-            }
+      res.send([headers.join(","), ...csvRows].join("\n"));
+    } else if (typeof data === "object" && data !== null) {
+      // **Flatten nested objects before converting to CSV**
+      function flattenObject(obj, prefix = "") {
+        return Object.keys(obj).reduce((acc, key) => {
+          const newKey = prefix ? `${prefix}_${key}` : key;
+          if (typeof obj[key] === "object" && obj[key] !== null) {
+            Object.assign(acc, flattenObject(obj[key], newKey));
+          } else {
+            acc[newKey] = obj[key];
+          }
+          return acc;
+        }, {});
+      }
 
-            const flatData = flattenObject(data);
-            const csvString = Object.keys(flatData).join(",") + "\n" + Object.values(flatData).join(",");
-            res.send(csvString);
-        } else {
-            res.send(String(data));
-        }
+      const flatData = flattenObject(data);
+      const csvString = Object.keys(flatData).join(",") + "\n" + Object.values(flatData).join(",");
+      res.send(csvString);
     } else {
-        res.json(data);
+      res.send(String(data));
     }
+  } else {
+    res.json(data);
+  }
 }
 
 
@@ -299,19 +303,19 @@ router.get("/admin/healthcheck", async (req, res) => {
 
     client.release()
     const healthcheck = {
-        dbconnection: connectionString,
-        n_stations,
-        n_tags,
-        n_passes
-      };
+      dbconnection: connectionString,
+      n_stations,
+      n_tags,
+      n_passes
+    };
 
     formatResponse(req, res, { status: "OK", ...healthcheck });
   } catch (err) {
-    const reason = { 
-        dbconnection: `postgresql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`
-      };
-  
-    formatResponse(req, res, {status: "failed", info: reason}, 500);
+    const reason = {
+      dbconnection: `postgresql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`
+    };
+
+    formatResponse(req, res, { status: "failed", info: reason }, 500);
   }
 })
 
@@ -348,10 +352,10 @@ router.post("/admin/dbdump", async (req, res) => {
     const dumpFilePath = `dump_${Date.now()}.sql`
 
     await dumpDatabase(dumpFilePath)
-  
-    formatResponse(req, res, {status: "OK", dumpFile: dumpFilePath});
+
+    formatResponse(req, res, { status: "OK", dumpFile: dumpFilePath });
   } catch (error) {
-    formatResponse(req, res, {status: "failed", info: error.message}, 500);
+    formatResponse(req, res, { status: "failed", info: error.message }, 500);
   }
 })
 
@@ -360,8 +364,8 @@ router.post("/admin/usermod", async (req, res) => {
   const { username, password } = req.body
 
   if (!username || !password) {
-    const reason = "Username and password are required" 
-    return formatResponse(req, res, {status: "failed", info: reason }, 400);
+    const reason = "Username and password are required"
+    return formatResponse(req, res, { status: "failed", info: reason }, 400);
   }
 
   try {
@@ -395,13 +399,13 @@ router.post("/admin/usermod", async (req, res) => {
 
       await pool.query(updateQuery, updateValues)
 
-    message = "User password updated successfully" 
+      message = "User password updated successfully"
     }
-    formatResponse(req, res, {status: "success", info: message});
+    formatResponse(req, res, { status: "success", info: message });
   } catch (error) {
     // Handle any errors that occur during the database update
-    const reason = "Internal server error" 
-    return formatResponse(req, res, {status: "failed", info: reason }, 500);
+    const reason = "Internal server error"
+    return formatResponse(req, res, { status: "failed", info: reason }, 500);
   }
 })
 
@@ -422,8 +426,8 @@ router.get("/admin/users", async (req, res) => {
     formatResponse(req, res, { status: "OK", usernames });
   } catch (error) {
     // Handle any errors that occur during the database query
-    const reason = "Internal server error" 
-    return formatResponse(req, res, {status: "failed", info: reason }, 500);
+    const reason = "Internal server error"
+    return formatResponse(req, res, { status: "failed", info: reason }, 500);
   }
 })
 
@@ -448,8 +452,8 @@ router.get("/admin/checkAdminStatus", async (req, res) => {
       res.json({ isAdmin: false })
     }
   } catch (error) {
-    const reason = "Internal server error" 
-    return formatResponse(req, res, {status: "failed", info: reason }, 500);
+    const reason = "Internal server error"
+    return formatResponse(req, res, { status: "failed", info: reason }, 500);
   }
 })
 
