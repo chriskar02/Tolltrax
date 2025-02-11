@@ -37,7 +37,7 @@ const AnalystDashboard = ({ user, setIsAuthenticated }) => {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'x-observatory-auth': `Bearer ${token}`,
+          'x-observatory-auth': token,
         },
       });
 
