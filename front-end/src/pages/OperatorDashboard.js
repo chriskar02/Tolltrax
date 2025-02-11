@@ -13,9 +13,9 @@ const OperatorDashboard = ({ user, setIsAuthenticated }) => {
         const fetchSettlements = async () => {
             try {
                 const token = localStorage.getItem('authToken');
-                const response = await fetch("http://localhost:9115/api/analytics/settlements", {
+                const response = await fetch("http://localhost:9115/api/settlements", {
                     method: "GET",
-                    headers: { "Authorization": `Bearer ${token}` }
+                    headers: { 'X-OBSERVATORY-AUTH': `Bearer ${token}` }
                 });
 
                 if (!response.ok) throw new Error("Failed to fetch settlements.");

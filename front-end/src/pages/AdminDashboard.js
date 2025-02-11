@@ -90,7 +90,7 @@ function AdminDashboard({ user }) {
     try {
       const response = await axios.get(
         `http://localhost:9115/api/tollStationPasses/${tollStationID}/${tsDateFrom}/${tsDateTo}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { 'X-OBSERVATORY-AUTH': `Bearer ${token}` } }
       );
       setTsResult(response.data);
     } catch (err) {
@@ -117,7 +117,7 @@ function AdminDashboard({ user }) {
     try {
       const response = await axios.get(
         `http://localhost:9115/api/passAnalysis/${paStationOpID}/${paTagOpID}/${paDateFrom}/${paDateTo}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { 'X-OBSERVATORY-AUTH': `Bearer ${token}` } }
       );
       setPaResult(response.data);
     } catch (err) {
@@ -144,7 +144,7 @@ function AdminDashboard({ user }) {
     try {
       const response = await axios.get(
         `http://localhost:9115/api/passesCost/${pcTollOpID}/${pcTagOpID}/${pcDateFrom}/${pcDateTo}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { 'X-OBSERVATORY-AUTH': `Bearer ${token}` } }
       );
       setPcResult(response.data);
     } catch (err) {
@@ -170,7 +170,7 @@ function AdminDashboard({ user }) {
     try {
       const response = await axios.get(
         `http://localhost:9115/api/chargesBy/${cbTollOpID}/${cbDateFrom}/${cbDateTo}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { 'X-OBSERVATORY-AUTH': `Bearer ${token}` } }
       );
       setCbResult(response.data);
     } catch (err) {

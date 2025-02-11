@@ -22,7 +22,7 @@ const TollStationPassesSection = () => {
     try {
       const response = await axios.get(
         `http://localhost:9115/api/tollStationPasses/${tollStationID}/${tsDateFrom}/${tsDateTo}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { 'X-OBSERVATORY-AUTH': `Bearer ${token}` } }
       );
       setTsResult(response.data);
     } catch (err) {
@@ -103,7 +103,7 @@ const PassAnalysisSection = () => {
       // /passAnalysis/:stationOpID/:tagOpID/:date_from/:date_to
       const response = await axios.get(
         `http://localhost:9115/api/passAnalysis/${stationOpID}/${tagOpID}/${dateFrom}/${dateTo}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { 'X-OBSERVATORY-AUTH': `Bearer ${token}` } }
       );
       setResult(response.data);
     } catch (err) {
@@ -195,7 +195,7 @@ const PassesCostSection = () => {
       // /passesCost/:tollOpID/:tagOpID/:date_from/:date_to
       const response = await axios.get(
         `http://localhost:9115/api/passesCost/${tollOpID}/${tagOpID}/${dateFrom}/${dateTo}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { 'X-OBSERVATORY-AUTH': `Bearer ${token}` } }
       );
       setResult(response.data);
     } catch (err) {
@@ -286,7 +286,7 @@ const ChargesBySection = () => {
       // /chargesBy/:tollOpID/:date_from/:date_to
       const response = await axios.get(
         `http://localhost:9115/api/chargesBy/${tollOpID}/${dateFrom}/${dateTo}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { 'X-OBSERVATORY-AUTH': `Bearer ${token}` } }
       );
       setResult(response.data);
     } catch (err) {

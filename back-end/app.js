@@ -27,7 +27,7 @@ initializeDatabase()
     app.use("/api", adminRoutes);
 
     const analyticsRoutes = require("./routes/analytics");
-    app.use("/api/analytics", analyticsRoutes);
+    app.use("/api", analyticsRoutes);
 
     // Catch-all route for debugging
     app.use("*", (req, res) => {

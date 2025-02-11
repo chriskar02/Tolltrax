@@ -19,7 +19,7 @@ import axios from 'axios';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState(null); 
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -28,8 +28,8 @@ function App() {
       if (token) {
         try {
           const response = await axios.get(
-            'http://localhost:3000/api/auth/verify-token',
-            { headers: { Authorization: `Bearer ${token}` } }
+            'http://localhost:9115/api/verify-token',
+            { headers: { 'X-OBSERVATORY-AUTH': `Bearer ${token}` } }
           );
           if (response.data.user) {
             setUser(response.data.user);
@@ -119,18 +119,18 @@ function App() {
 
           {/* OPERATOR (DEFAULT FOR ANY OTHER TYPE) */}
           {isAuthenticated && user &&
-           normalizedUserType !== "normal" &&
-           normalizedUserType !== "analyst" && (
-            <Route
-              path="/dashboard"
-              element={
-                <OperatorDashboard
-                  user={user}
-                  setIsAuthenticated={setIsAuthenticated}
-                />
-              }
-            />
-          )}
+            normalizedUserType !== "normal" &&
+            normalizedUserType !== "analyst" && (
+              <Route
+                path="/dashboard"
+                element={
+                  <OperatorDashboard
+                    user={user}
+                    setIsAuthenticated={setIsAuthenticated}
+                  />
+                }
+              />
+            )}
 
           {/* FALLBACK */}
           <Route path="*" element={<Navigate to="/" replace />} />
