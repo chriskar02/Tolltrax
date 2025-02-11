@@ -29,42 +29,42 @@ function formatDate(dateString) {
 // Utility function to format response
 function formatResponse(req, res, data, statusCode = 200) {
   const format = req.query.format || "json";
-  res.status(statusCode); 
+  res.status(statusCode);
 
   if (format === "csv") {
-      res.setHeader("Content-Type", "text/csv");
+    res.setHeader("Content-Type", "text/csv");
 
-      if (Array.isArray(data)) {
-          if (data.length === 0) {
-              return res.send("");
-          }
-
-          const headers = Object.keys(data[0]);
-          const csvRows = data.map(row => headers.map(field => JSON.stringify(row[field] || "")).join(","));
-
-          res.send([headers.join(","), ...csvRows].join("\n"));
-      } else if (typeof data === "object" && data !== null) {
-          // **Flatten nested objects before converting to CSV**
-          function flattenObject(obj, prefix = "") {
-              return Object.keys(obj).reduce((acc, key) => {
-                  const newKey = prefix ? `${prefix}_${key}` : key;
-                  if (typeof obj[key] === "object" && obj[key] !== null) {
-                      Object.assign(acc, flattenObject(obj[key], newKey));
-                  } else {
-                      acc[newKey] = obj[key];
-                  }
-                  return acc;
-              }, {});
-          }
-
-          const flatData = flattenObject(data);
-          const csvString = Object.keys(flatData).join(",") + "\n" + Object.values(flatData).join(",");
-          res.send(csvString);
-      } else {
-          res.send(String(data));
+    if (Array.isArray(data)) {
+      if (data.length === 0) {
+        return res.send("");
       }
+
+      const headers = Object.keys(data[0]);
+      const csvRows = data.map(row => headers.map(field => JSON.stringify(row[field] || "")).join(","));
+
+      res.send([headers.join(","), ...csvRows].join("\n"));
+    } else if (typeof data === "object" && data !== null) {
+      // **Flatten nested objects before converting to CSV**
+      function flattenObject(obj, prefix = "") {
+        return Object.keys(obj).reduce((acc, key) => {
+          const newKey = prefix ? `${prefix}_${key}` : key;
+          if (typeof obj[key] === "object" && obj[key] !== null) {
+            Object.assign(acc, flattenObject(obj[key], newKey));
+          } else {
+            acc[newKey] = obj[key];
+          }
+          return acc;
+        }, {});
+      }
+
+      const flatData = flattenObject(data);
+      const csvString = Object.keys(flatData).join(",") + "\n" + Object.values(flatData).join(",");
+      res.send(csvString);
+    } else {
+      res.send(String(data));
+    }
   } else {
-      res.json(data);
+    res.json(data);
   }
 }
 

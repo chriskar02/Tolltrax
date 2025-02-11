@@ -161,4 +161,45 @@ router.get(
   }
 );
 
+// ==========================================================
+// NEW ENDPOINT: Aggregated Settlements for the Current Operator
+// ==========================================================
+
+router.get("/settlements", async (req, res) => {
+  // Extract the operator's ID from the token (stored in req.user.type)
+  const operatorId = req.user.type;
+  if (!operatorId) {
+    return res.status(400).json({ message: "Operator ID missing from token." });
+  }
+  console.log("Settlements endpoint called for operator:", operatorId); // Debug log
+  try {
+    const client = await pool.connect();
+    try {
+      const query = `
+        SELECT
+          CASE
+            WHEN payer = $1 THEN payee
+            ELSE payer
+            END AS other_operator,
+          SUM(
+              CASE
+                WHEN payer = $1 THEN -amount -- Negative when the logged-in operator is the payer
+                ELSE amount -- Positive when the logged-in operator is the payee
+                END
+          ) AS total_settlement
+        FROM debt_settlement
+        WHERE payer = $1 OR payee = $1
+        GROUP BY other_operator;
+      `;
+      const result = await client.query(query, [operatorId]);
+      res.json(result.rows);
+    } finally {
+      client.release();
+    }
+  } catch (err) {
+    console.error("Error fetching settlements:", err.message);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
 module.exports = router;

@@ -109,7 +109,7 @@ program
     requireAdmin()
     try {
       const response = await axios.get(`${API_BASE_URL}/admin/healthcheck?format=${options.format}`, {
-        headers: { Authorization: `Bearer ${loadToken()}` },
+        headers: { 'x-observatory-auth': `Bearer ${loadToken()}` },
       })
 
       console.log(response.data);
@@ -130,7 +130,7 @@ program
         `${API_BASE_URL}/admin/resetpasses?format=${options.format}`,
         {},
         {
-          headers: { Authorization: `Bearer ${loadToken()}` },
+          headers: { 'x-observatory-auth': `Bearer ${loadToken()}` },
         },
       )
 
@@ -152,7 +152,7 @@ program
         `${API_BASE_URL}/admin/resetstations?format=${options.format}`,
         {},
         {
-          headers: { Authorization: `Bearer ${loadToken()}` },
+          headers: { 'x-observatory-auth': `Bearer ${loadToken()}` },
         },
       )
 
@@ -176,7 +176,7 @@ program
       const response = await axios.get(
         `${API_BASE_URL}/tollStationPasses/${options.station}/${options.from}/${options.to}?format=${options.format}`,
         {
-          headers: { Authorization: `Bearer ${loadToken()}` },
+          headers: { 'x-observatory-auth': `Bearer ${loadToken()}` },
         },
       )
 
@@ -201,7 +201,7 @@ program
       const response = await axios.get(
         `${API_BASE_URL}/passAnalysis/${options.stationop}/${options.tagop}/${options.from}/${options.to}?format=${options.format}`,
         {
-          headers: { Authorization: `Bearer ${loadToken()}` },
+          headers: { 'x-observatory-auth': `Bearer ${loadToken()}` },
         },
       )
 
@@ -226,7 +226,7 @@ program
       const response = await axios.get(
         `${API_BASE_URL}/passesCost/${options.stationop}/${options.tagop}/${options.from}/${options.to}?format=${options.format}`,
         {
-          headers: { Authorization: `Bearer ${loadToken()}` },
+          headers: { 'x-observatory-auth': `Bearer ${loadToken()}` },
         },
       )
 
@@ -248,7 +248,7 @@ program
     requireLogin()
     try {
       const response = await axios.get(`${API_BASE_URL}/chargesBy/${options.opid}/${options.from}/${options.to}?format=${options.format}`, {
-        headers: { Authorization: `Bearer ${loadToken()}` },
+        headers: { 'x-observatory-auth': `Bearer ${loadToken()}` },
       })
 
       console.log(response.data);
@@ -286,7 +286,7 @@ program
               password: options.passw,
             },
             {
-              headers: { Authorization: `Bearer ${loadToken()}` },
+              headers: { 'x-observatory-auth': `Bearer ${loadToken()}` },
             },
           )
         } catch (error) {
@@ -296,7 +296,7 @@ program
       } else if (options.users) {
         try {
           response = await axios.get(`${API_BASE_URL}/admin/users`, {
-            headers: { Authorization: `Bearer ${loadToken()}` },
+            headers: { 'x-observatory-auth': `Bearer ${loadToken()}` },
           })
         } catch (error) {
           console.log(JSON.stringify(error.response?.data || { error: error.message }, null, 2))
@@ -313,7 +313,7 @@ program
             `${API_BASE_URL}/admin/addpasses`,
             { source: options.source },
             {
-              headers: { Authorization: `Bearer ${loadToken()}` },
+              headers: { 'x-observatory-auth': `Bearer ${loadToken()}` },
             },
           )
         } catch (error) {

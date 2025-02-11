@@ -47,7 +47,7 @@ router.post("/login", async (req, res) => {
 
 // Verify Token
 router.get("/verify-token", (req, res) => {
-    const authHeader = req.headers["X-OBSERVATORY-AUTH"];
+    const authHeader = req.headers['x-observatory-auth'];
     const token = authHeader && authHeader.split(" ")[1];
 
     if (!token) {
@@ -65,7 +65,7 @@ router.get("/verify-token", (req, res) => {
 // Logout (Handled client-side)
 router.post("/logout", (req, res) => {
     // Retrieve the token from the custom header:
-    const token = req.headers["x-observatory-auth"];
+    const token = req.headers['x-observatory-auth'];
     if (!token) {
         return res.status(401).json({ error: "Authentication token required" });
     }
@@ -76,7 +76,7 @@ router.post("/logout", (req, res) => {
 //Middleware auth functions
 
 function authenticateToken(req, res, next) {
-    const authHeader = req.headers["X-OBSERVATORY-AUTH"];
+    const authHeader = req.headers['x-observatory-auth'];
     // Expecting header in the format "Bearer <token>"
     const token = authHeader && authHeader.split(" ")[1];
 

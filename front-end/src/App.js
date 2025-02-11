@@ -29,7 +29,7 @@ function App() {
         try {
           const response = await axios.get(
             'http://localhost:9115/api/verify-token',
-            { headers: { 'X-OBSERVATORY-AUTH': `Bearer ${token}` } }
+            { headers: { 'x-observatory-auth': `Bearer ${token}` } }
           );
           if (response.data.user) {
             setUser(response.data.user);

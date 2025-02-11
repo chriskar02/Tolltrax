@@ -428,31 +428,5 @@ router.get("/admin/users", async (req, res) => {
   }
 })
 
-// API to check if the user is an admin
-router.get("/admin/checkAdminStatus", async (req, res) => {
-  try {
-    const token = req.headers.authorization.split(" ")[1]
-    const decoded = jwt.verify(token, process.env.JWT_SECRET)
-    const username = decoded.username
-
-    const query = `
-      SELECT type
-      FROM "user"
-      WHERE username = $1;
-    `
-
-    const result = await pool.query(query, [username])
-
-    if (result.rows.length > 0 && result.rows[0].type === "admin") {
-      res.json({ isAdmin: true })
-    } else {
-      res.json({ isAdmin: false })
-    }
-  } catch (error) {
-    const reason = "Internal server error"
-    return formatResponse(req, res, { status: "failed", info: reason }, 500);
-  }
-})
-
 module.exports = router
 
