@@ -33,7 +33,7 @@ function Login({ setIsAuthenticated, setUser }) {
       // Optionally, verify the token immediately to get user info,
       // or decode the token on the client side (if it is not encrypted)
       const verifyResponse = await axios.get('http://localhost:9115/api/verify-token', {
-        headers: { "x-observatory-auth": token }
+        headers: { "x-observatory-auth": `Bearer ${token}`}
       });
 
       if (verifyResponse.data.user) {
