@@ -26,15 +26,58 @@ async function runTransaction(callback) {
   }
 }
 
+// Utility function to format response
+function formatResponse(req, res, data, statusCode = 200) {
+    const format = req.query.format || "json";
+    res.status(statusCode); 
+
+    if (format === "csv") {
+        res.setHeader("Content-Type", "text/csv");
+
+        if (Array.isArray(data)) {
+            if (data.length === 0) {
+                return res.send("");
+            }
+
+            const headers = Object.keys(data[0]);
+            const csvRows = data.map(row => headers.map(field => JSON.stringify(row[field] || "")).join(","));
+
+            res.send([headers.join(","), ...csvRows].join("\n"));
+        } else if (typeof data === "object" && data !== null) {
+            // **Flatten nested objects before converting to CSV**
+            function flattenObject(obj, prefix = "") {
+                return Object.keys(obj).reduce((acc, key) => {
+                    const newKey = prefix ? `${prefix}_${key}` : key;
+                    if (typeof obj[key] === "object" && obj[key] !== null) {
+                        Object.assign(acc, flattenObject(obj[key], newKey));
+                    } else {
+                        acc[newKey] = obj[key];
+                    }
+                    return acc;
+                }, {});
+            }
+
+            const flatData = flattenObject(data);
+            const csvString = Object.keys(flatData).join(",") + "\n" + Object.values(flatData).join(",");
+            res.send(csvString);
+        } else {
+            res.send(String(data));
+        }
+    } else {
+        res.json(data);
+    }
+}
+
+
 // Reset stations
 router.post("/admin/resetstations", async (req, res) => {
   try {
+    const stations = []
     await runTransaction(async (client) => {
       const csvPath = path.join(__dirname, "..", "data", "tollstations2024.csv")
 
       // Process operators first
       const operators = new Map()
-      const stations = []
 
       await new Promise((resolve, reject) => {
         fs.createReadStream(csvPath)
@@ -87,10 +130,9 @@ router.post("/admin/resetstations", async (req, res) => {
       }
     })
 
-    res.json({ status: "OK" })
+    formatResponse(req, res, { status: "OK", stations });
   } catch (err) {
-    console.error("Reset stations error:", err)
-    res.status(500).json({ status: "failed", info: err.message })
+    formatResponse(req, res, { status: "failed", info: err.message }, 500);
   }
 })
 
@@ -103,9 +145,9 @@ router.post("/admin/resetpasses", async (req, res) => {
                 transceiver RESTART IDENTITY;
             `)
     })
-    res.json({ status: "OK" })
+    formatResponse(req, res, { status: "OK" });
   } catch (err) {
-    res.status(500).json({ status: "failed", info: err.message })
+    formatResponse(req, res, { status: "failed", info: err.message }, 500);
   }
 })
 
@@ -234,14 +276,13 @@ router.post("/admin/addpasses", async (req, res) => {
       }
     })
 
-    res.json({ status: "OK", newPasses })
+    formatResponse(req, res, { status: "OK", newPasses });
   } catch (err) {
-    console.error("Add passes error:", err)
-    res.status(500).json({ status: "failed", info: err.message })
+    formatResponse(req, res, { status: "failed", info: err.message }, 500);
   }
 })
 
-//Healthcheck
+// Healthcheck
 router.get("/admin/healthcheck", async (req, res) => {
   try {
     const client = await pool.connect()
@@ -257,20 +298,20 @@ router.get("/admin/healthcheck", async (req, res) => {
     const connectionString = `postgresql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`
 
     client.release()
+    const healthcheck = {
+        dbconnection: connectionString,
+        n_stations,
+        n_tags,
+        n_passes
+      };
 
-    res.status(200).json({
-      status: "OK",
-      dbconnection: connectionString,
-      n_stations: n_stations,
-      n_tags: n_tags,
-      n_passes: n_passes,
-    })
+    formatResponse(req, res, { status: "OK", ...healthcheck });
   } catch (err) {
-    console.error("Database connection error:", err)
-    res.status(500).json({
-      status: "failed",
-      dbconnection: `postgresql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`,
-    })
+    const reason = { 
+        dbconnection: `postgresql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`
+      };
+  
+    formatResponse(req, res, {status: "failed", info: reason}, 500);
   }
 })
 
@@ -281,9 +322,9 @@ router.post("/admin/resetusers", async (req, res) => {
     await client.query('TRUNCATE TABLE "user" RESTART IDENTITY CASCADE')
     await populateUsers(client)
     client.release()
-    res.json({ status: "OK" })
+    formatResponse(req, res, { status: "OK" });
   } catch (err) {
-    res.status(500).json({ status: "failed", info: err.message })
+    formatResponse(req, res, { status: "failed", info: err.message }, 500);
   }
 })
 
@@ -294,9 +335,9 @@ router.post("/admin/resetvehicles", async (req, res) => {
     await client.query("TRUNCATE TABLE vehicle RESTART IDENTITY CASCADE")
     await populateVehicles(client)
     client.release()
-    res.json({ status: "OK" })
+    formatResponse(req, res, { status: "OK" });
   } catch (err) {
-    res.status(500).json({ status: "failed", info: err.message })
+    formatResponse(req, res, { status: "failed", info: err.message }, 500);
   }
 })
 
@@ -307,28 +348,20 @@ router.post("/admin/dbdump", async (req, res) => {
     const dumpFilePath = `dump_${Date.now()}.sql`
 
     await dumpDatabase(dumpFilePath)
-
-    res.status(200).json({
-      status: "OK",
-      message: "Database dump created successfully",
-      dumpFile: dumpFilePath,
-    })
+  
+    formatResponse(req, res, {status: "OK", dumpFile: dumpFilePath});
   } catch (error) {
-    console.error("Error during database dump:", error)
-    res.status(500).json({
-      status: "failed",
-      message: "Database dump failed",
-      error: error.message,
-    })
+    formatResponse(req, res, {status: "failed", info: error.message}, 500);
   }
 })
 
-//API to update a user
+// API to update a user
 router.post("/admin/usermod", async (req, res) => {
   const { username, password } = req.body
 
   if (!username || !password) {
-    return res.status(400).json({ status: "failed", info: "Username and password are required" })
+    const reason = "Username and password are required" 
+    return formatResponse(req, res, {status: "failed", info: reason }, 400);
   }
 
   try {
@@ -350,7 +383,7 @@ router.post("/admin/usermod", async (req, res) => {
 
       await pool.query(insertQuery, insertValues)
 
-      return res.json({ status: "success", message: "User created successfully" })
+      message = "User created successfully"
     } else {
       // User exists, update the password, keeping the existing type
       const updateQuery = `
@@ -362,16 +395,17 @@ router.post("/admin/usermod", async (req, res) => {
 
       await pool.query(updateQuery, updateValues)
 
-      return res.json({ status: "success", message: "User password updated successfully" })
+    message = "User password updated successfully" 
     }
+    formatResponse(req, res, {status: "success", info: message});
   } catch (error) {
     // Handle any errors that occur during the database update
-    console.error("Error updating/creating user:", error)
-    res.status(500).json({ status: "failed", info: "Internal server error" })
+    const reason = "Internal server error" 
+    return formatResponse(req, res, {status: "failed", info: reason }, 500);
   }
 })
 
-//API to list users
+// API to list users
 router.get("/admin/users", async (req, res) => {
   try {
     const query = `
@@ -385,11 +419,11 @@ router.get("/admin/users", async (req, res) => {
     const usernames = result.rows.map((row) => row.username)
 
     // Respond with the list of usernames
-    res.json(usernames)
+    formatResponse(req, res, { status: "OK", usernames });
   } catch (error) {
     // Handle any errors that occur during the database query
-    console.error("Error getting users:", error)
-    res.status(500).json({ status: "failed", info: "Internal server error" })
+    const reason = "Internal server error" 
+    return formatResponse(req, res, {status: "failed", info: reason }, 500);
   }
 })
 
@@ -414,8 +448,8 @@ router.get("/admin/checkAdminStatus", async (req, res) => {
       res.json({ isAdmin: false })
     }
   } catch (error) {
-    console.error("Error checking admin status:", error)
-    res.status(500).json({ status: "failed", info: "Internal server error" })
+    const reason = "Internal server error" 
+    return formatResponse(req, res, {status: "failed", info: reason }, 500);
   }
 })
 

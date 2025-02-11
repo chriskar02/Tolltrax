@@ -37,27 +37,6 @@ function requireLogin() {
   }
 }
 
-// Helper function to write response in specified format
-async function writeResponse(response, format = "csv") {
-  if (format === "json") {
-    console.log(JSON.stringify(response.data)) // Ensures JSON is properly formatted
-  } else if (format === "csv") {
-    try {
-      if (typeof response.data === "object") {
-        const parser = new Parser()
-        const csv = parser.parse(response.data)
-        console.log(csv)
-      } else {
-        console.error("Error: Expected object for CSV conversion but got:", response.data)
-      }
-    } catch (err) {
-      console.error("Error converting to CSV:", err.message)
-    }
-  } else {
-    console.error("Unsupported format:", format)
-  }
-}
-
 // Function to check if the user is an admin
 async function isAdmin() {
   try {
@@ -116,11 +95,11 @@ program
       process.exit(1)
     }
     try {
-      const response = await axios.get(`${API_BASE_URL}/admin/healthcheck`, {
+      const response = await axios.get(`${API_BASE_URL}/admin/healthcheck?format=${options.format}`, {
         headers: { Authorization: `Bearer ${loadToken()}` },
       })
 
-      await writeResponse(response, options.format)
+      console.log(response.data);
     } catch (error) {
       console.log(JSON.stringify(error.response?.data || { error: error.message }, null, 2))
     }
@@ -139,14 +118,14 @@ program
     }
     try {
       const response = await axios.post(
-        `${API_BASE_URL}/admin/resetpasses`,
+        `${API_BASE_URL}/admin/resetpasses?format=${options.format}`,
         {},
         {
           headers: { Authorization: `Bearer ${loadToken()}` },
         },
       )
 
-      await writeResponse(response, options.format)
+      console.log(response.data);
     } catch (error) {
       console.log(JSON.stringify(error.response?.data || { error: error.message }, null, 2))
     }
@@ -165,14 +144,14 @@ program
     }
     try {
       const response = await axios.post(
-        `${API_BASE_URL}/admin/resetstations`,
+        `${API_BASE_URL}/admin/resetstations?format=${options.format}`,
         {},
         {
           headers: { Authorization: `Bearer ${loadToken()}` },
         },
       )
 
-      await writeResponse(response, options.format)
+      console.log(response.data);
     } catch (error) {
       console.log(JSON.stringify(error.response?.data || { error: error.message }, null, 2))
     }
@@ -190,13 +169,13 @@ program
     requireLogin()
     try {
       const response = await axios.get(
-        `${API_BASE_URL}/tollStationPasses/${options.station}/${options.from}/${options.to}`,
+        `${API_BASE_URL}/tollStationPasses/${options.station}/${options.from}/${options.to}?format=${options.format}`,
         {
           headers: { Authorization: `Bearer ${loadToken()}` },
         },
       )
 
-      await writeResponse(response, options.format)
+      console.log(response.data);
     } catch (error) {
       console.log(JSON.stringify(error.response?.data || { error: error.message }, null, 2))
     }
@@ -215,13 +194,13 @@ program
     requireLogin()
     try {
       const response = await axios.get(
-        `${API_BASE_URL}/passAnalysis/${options.stationop}/${options.tagop}/${options.from}/${options.to}`,
+        `${API_BASE_URL}/passAnalysis/${options.stationop}/${options.tagop}/${options.from}/${options.to}?format=${options.format}`,
         {
           headers: { Authorization: `Bearer ${loadToken()}` },
         },
       )
 
-      await writeResponse(response, options.format)
+      console.log(response.data);
     } catch (error) {
       console.log(JSON.stringify(error.response?.data || { error: error.message }, null, 2))
     }
@@ -240,13 +219,13 @@ program
     requireLogin()
     try {
       const response = await axios.get(
-        `${API_BASE_URL}/passesCost/${options.stationop}/${options.tagop}/${options.from}/${options.to}`,
+        `${API_BASE_URL}/passesCost/${options.stationop}/${options.tagop}/${options.from}/${options.to}?format=${options.format}`,
         {
           headers: { Authorization: `Bearer ${loadToken()}` },
         },
       )
 
-      await writeResponse(response, options.format)
+      console.log(response.data);
     } catch (error) {
       console.log(JSON.stringify(error.response?.data || { error: error.message }, null, 2))
     }
@@ -263,11 +242,11 @@ program
   .action(async (options) => {
     requireLogin()
     try {
-      const response = await axios.get(`${API_BASE_URL}/chargesBy/${options.opid}/${options.from}/${options.to}`, {
+      const response = await axios.get(`${API_BASE_URL}/chargesBy/${options.opid}/${options.from}/${options.to}?format=${options.format}`, {
         headers: { Authorization: `Bearer ${loadToken()}` },
       })
 
-      await writeResponse(response, options.format)
+      console.log(response.data);
     } catch (error) {
       console.log(JSON.stringify(error.response?.data || { error: error.message }, null, 2))
     }
