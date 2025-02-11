@@ -4,7 +4,7 @@ const cors = require("cors");
 const { initializeDatabase } = require("./routes/db"); // Import initializeDatabase
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT;
 
 app.use(cors());
 app.use(express.json());
@@ -18,13 +18,13 @@ initializeDatabase()
 
     // Register routes only after DB initialization
     const { router: authRoutes } = require("./routes/auth");
-    app.use("/", authRoutes);
+    app.use("/api", authRoutes);
 
     const passesRoutes = require("./routes/passes");
-    app.use("/", passesRoutes);
+    app.use("/api", passesRoutes);
 
     const adminRoutes = require("./routes/admin");
-    app.use("/", adminRoutes);
+    app.use("/api", adminRoutes);
 
     // Catch-all route for debugging
     app.use("*", (req, res) => {

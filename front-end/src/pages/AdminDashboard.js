@@ -35,28 +35,28 @@ function AdminDashboard({ user }) {
 
   async function resetStations() {
     await performAction(
-      () => axios.post("http://localhost:3000/admin/resetstations"),
+      () => axios.post("http://localhost:9115/api/admin/resetstations"),
       "Stations reset successfully"
     );
   }
 
   async function resetPasses() {
     await performAction(
-      () => axios.post("http://localhost:3000/admin/resetpasses"),
+      () => axios.post("http://localhost:9115/api/admin/resetpasses"),
       "Passes reset successfully"
     );
   }
 
   async function addPasses() {
     await performAction(
-      () => axios.post("http://localhost:3000/admin/addpasses"),
+      () => axios.post("http://localhost:9115/api/admin/addpasses"),
       (response) => `Passes added successfully. New passes: ${response.data.newPasses}`
     );
   }
 
   async function performHealthcheck() {
     await performAction(
-      () => axios.get("http://localhost:3000/admin/healthcheck"),
+      () => axios.get("http://localhost:9115/api/admin/healthcheck"),
       "Healthcheck completed successfully!",
       true
     );
@@ -89,7 +89,7 @@ function AdminDashboard({ user }) {
     setTsResult(null);
     try {
       const response = await axios.get(
-        `http://localhost:3000/tollStationPasses/${tollStationID}/${tsDateFrom}/${tsDateTo}`,
+        `http://localhost:9115/api/tollStationPasses/${tollStationID}/${tsDateFrom}/${tsDateTo}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setTsResult(response.data);
@@ -116,7 +116,7 @@ function AdminDashboard({ user }) {
     setPaResult(null);
     try {
       const response = await axios.get(
-        `http://localhost:3000/passAnalysis/${paStationOpID}/${paTagOpID}/${paDateFrom}/${paDateTo}`,
+        `http://localhost:9115/api/passAnalysis/${paStationOpID}/${paTagOpID}/${paDateFrom}/${paDateTo}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setPaResult(response.data);
@@ -143,7 +143,7 @@ function AdminDashboard({ user }) {
     setPcResult(null);
     try {
       const response = await axios.get(
-        `http://localhost:3000/passesCost/${pcTollOpID}/${pcTagOpID}/${pcDateFrom}/${pcDateTo}`,
+        `http://localhost:9115/api/passesCost/${pcTollOpID}/${pcTagOpID}/${pcDateFrom}/${pcDateTo}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setPcResult(response.data);
@@ -169,7 +169,7 @@ function AdminDashboard({ user }) {
     setCbResult(null);
     try {
       const response = await axios.get(
-        `http://localhost:3000/chargesBy/${cbTollOpID}/${cbDateFrom}/${cbDateTo}`,
+        `http://localhost:9115/api/chargesBy/${cbTollOpID}/${cbDateFrom}/${cbDateTo}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setCbResult(response.data);

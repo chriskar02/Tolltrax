@@ -21,7 +21,7 @@ function Login({ setIsAuthenticated, setUser }) {
     setError('');
 
     try {
-      const response = await axios.post('http://localhost:3000/login', {
+      const response = await axios.post('http://localhost:9115/api/login', {
         username,
         password,
       });
@@ -32,7 +32,7 @@ function Login({ setIsAuthenticated, setUser }) {
 
       // Optionally, verify the token immediately to get user info,
       // or decode the token on the client side (if it is not encrypted)
-      const verifyResponse = await axios.get('http://localhost:3000/verify-token', {
+      const verifyResponse = await axios.get('http://localhost:9115/api/verify-token', {
         headers: { Authorization: `Bearer ${token}` },
       });
 

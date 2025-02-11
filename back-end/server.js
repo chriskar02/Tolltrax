@@ -17,7 +17,7 @@ const pool = new Pool({
   port: process.env.DB_PORT,
 });
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT;
 
 app.get('/', (req, res) => {
   res.send('Tollway System API');
@@ -27,5 +27,3 @@ app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
 
-const adminRoutes = require('./routes/admin');
-app.use('/api', adminRoutes);
