@@ -34,7 +34,7 @@ router.post("/login", async (req, res) => {
         const token = jwt.sign(
             { username: user.username, type: user.type },
             SECRET_KEY,
-            { expiresIn: process.env.JWT_EXPIRATION || "2h" } 
+            { expiresIn: process.env.JWT_EXPIRATION || "2h" }
         );
 
         return res.json({ status: "OK", token });
@@ -47,7 +47,7 @@ router.post("/login", async (req, res) => {
 
 // Verify Token
 router.get("/verify-token", (req, res) => {
-    const authHeader = req.headers["authorization"];
+    const authHeader = req.headers["X-OBSERVATORY-AUTH"];
     const token = authHeader && authHeader.split(" ")[1];
 
     if (!token) {
@@ -64,14 +64,19 @@ router.get("/verify-token", (req, res) => {
 
 // Logout (Handled client-side)
 router.post("/logout", (req, res) => {
-    return res.status(200).json({ message: "Logged out successfully" });
+    // Retrieve the token from the custom header:
+    const token = req.headers["x-observatory-auth"];
+    if (!token) {
+        return res.status(401).json({ error: "Authentication token required" });
+    }
+    return res.sendStatus(200);
 });
 
 
 //Middleware auth functions
 
 function authenticateToken(req, res, next) {
-    const authHeader = req.headers["authorization"];
+    const authHeader = req.headers["X-OBSERVATORY-AUTH"];
     // Expecting header in the format "Bearer <token>"
     const token = authHeader && authHeader.split(" ")[1];
 

@@ -8,7 +8,6 @@ const csv = require("csv-parser")
 const bcrypt = require("bcrypt")
 const saltRounds = 10
 const jwt = require("jsonwebtoken")
-const { authenticateToken, checkRole } = require("./auth");
 
 const pool = getPool() // Get the shared pool instance
 

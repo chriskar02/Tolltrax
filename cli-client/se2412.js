@@ -7,7 +7,7 @@ const fs = require("fs")
 const jwt = require("jsonwebtoken");
 require("dotenv").config({ path: "../back-end/.env" });
 
-const API_BASE_URL = "http://localhost:3000"
+const API_BASE_URL = "http://localhost:9115/api"
 const TOKEN_FILE = "token.json"
 
 // Function to save JWT token
