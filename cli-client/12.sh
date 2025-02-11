@@ -1,11 +1,11 @@
 se2412 logout
-se2412 login --username [your username] --passw [your password]
+se2412 login --username admin --passw freepasses4all
 se2412 healthcheck
 se2412 resetpasses
 se2412 healthcheck
 se2412 resetstations
 se2412 healthcheck
-se2412 admin --addpasses --source passes12.csv
+se2412 admin --addpasses --source ../back-end/data/passes12.csv
 se2412 healthcheck
 se2412 tollstationpasses --station AM08 --from 20220203 --to 20220217 --format json
 se2412 tollstationpasses --station NAO04 --from 20220203 --to 20220217 --format csv

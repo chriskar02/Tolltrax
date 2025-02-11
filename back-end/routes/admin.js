@@ -170,7 +170,7 @@ router.post("/admin/addpasses", async (req, res) => {
 
     await runTransaction(async (client) => {
       // 1. Load passes from CSV and normalize rows
-      const passesCsvPath = path.join(__dirname, "..", "data", "passes-sample.csv")
+      const passesCsvPath = path.join(__dirname, "..", "data", "passes12.csv")
       const passes = []
       await new Promise((resolve, reject) => {
         fs.createReadStream(passesCsvPath)
