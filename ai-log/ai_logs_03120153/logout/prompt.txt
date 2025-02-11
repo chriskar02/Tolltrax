@@ -1,0 +1,8 @@
+User:
+
+how is logout implemented if we just return the 200 status? (copied the logout section of the project description)
+
+
+AI:
+
+In JWT-based systems the logout endpoint often doesn’t “destroy” any server-side session because JWTs are stateless. In your implementation, the /logout endpoint simply returns a 200 OK status with an empty body. This indicates to the client that the logout operation was successful; however, the token itself isn’t stored or maintained on the server in a way that you can “invalidate” it. Instead, the responsibility falls on the client to remove its token (for example, by clearing it from local storage or memory) so that it is no longer sent with API requests. If you wanted to actively revoke a token on the server side, you would have to build a token blacklist system in which tokens that have been “logged out” are recorded and checked for in middleware. Without this mechanism, simply returning a 200 status is all that’s needed—the token will eventually expire (as set in JWT_EXPIRATION) and it won’t be used once cleared by the client. This approach is common practice in many systems using stateless authentication.
