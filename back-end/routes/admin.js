@@ -12,8 +12,6 @@ const { authenticateToken, checkRole } = require("./auth");
 
 const pool = getPool() // Get the shared pool instance
 
-router.use(authenticateToken);
-router.use(checkRole(["admin"])); //extra layer of security to limit admin api calls to logged in admins
 
 // Helper function for transactions
 async function runTransaction(callback) {
