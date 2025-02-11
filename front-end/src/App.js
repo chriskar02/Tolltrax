@@ -58,33 +58,23 @@ function App() {
     return <div>Loading...</div>;
   }
 
-  const normalizedUserType = user && user.type
-    ? user.type.toLowerCase().trim()
-    : '';
+  const normalizedUserType = user && user.type ? user.type.toLowerCase().trim() : '';
 
   return (
     <Router>
       <div className="App">
-        <ConditionalHeader
-          setIsAuthenticated={setIsAuthenticated}
-          setUser={setUser}
-        />
+        <ConditionalHeader setIsAuthenticated={setIsAuthenticated} setUser={setUser} />
         <Routes>
-          {/* LOGIN OR REDIRECT */}
           <Route
             path="/"
             element={
               isAuthenticated ? (
                 <Navigate to="/dashboard" replace />
               ) : (
-                <Login
-                  setIsAuthenticated={setIsAuthenticated}
-                  setUser={setUser}
-                />
+                <Login setIsAuthenticated={setIsAuthenticated} setUser={setUser} />
               )
             }
           />
-
           {/* NORMAL USER DASHBOARD WITH NESTED ROUTES */}
           {isAuthenticated && user && normalizedUserType === "normal" && (
             <Route path="/dashboard/*" element={
@@ -96,14 +86,12 @@ function App() {
             }>
               <Route path="passes" element={<NormalUserPassesDashboard />} />
               <Route path="balance" element={<NormalUserBalanceDashboard />} />
-              <Route index element={
-                <div className="text-center">
-                  Select an option above.
-                </div>
-              } />
+              <Route
+                index
+                element={<div className="text-center">Select an option above.</div>}
+              />
             </Route>
           )}
-
           {/* ANALYST */}
           {isAuthenticated && user && normalizedUserType === "analyst" && (
             <Route
@@ -116,8 +104,7 @@ function App() {
               }
             />
           )}
-
-          {/* OPERATOR (DEFAULT FOR ANY OTHER TYPE) */}
+          {/* OPERATOR (default for any other type) */}
           {isAuthenticated && user &&
             normalizedUserType !== "normal" &&
             normalizedUserType !== "analyst" && (
@@ -131,8 +118,6 @@ function App() {
                 }
               />
             )}
-
-          {/* FALLBACK */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         <Footer />
@@ -151,6 +136,7 @@ function ConditionalHeader({ setIsAuthenticated, setUser }) {
 }
 
 export default App;
+
 
 
 
