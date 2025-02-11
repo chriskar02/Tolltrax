@@ -1,41 +1,44 @@
-// Dashboard.js
-import React from "react";
-import { Container, Button } from "react-bootstrap";
-import { Link, Outlet, useNavigate } from "react-router-dom";
+// src/pages/Dashboard.js
+import React from 'react';
+import UserDashboard from './UserDashboard';
+import AnalystDashboard from './AnalystDashboard';
+import OperatorDashboard from './OperatorDashboard';
 
-export default function Dashboard({ user, setIsAuthenticated, setUser }) {
-  const navigate = useNavigate();
+function Dashboard({ user, setIsAuthenticated, setUser }) {
+  // Normalize user type: convert to lowercase and trim extra spaces.
+  const normalizedUserType = user && user.type ? user.type.toLowerCase().trim() : '';
+  console.log("Dashboard: normalized user type:", normalizedUserType);
+  console.log("Full user object:", user);
 
-  const handleLogout = () => {
-    localStorage.removeItem("authToken");
-    setIsAuthenticated(false);
-    setUser(null);
-    navigate("/");
-  };
-
-  return (
-    <Container className="mt-5">
-      <h1 className="text-center">Welcome, {user.username}</h1>
-      <div className="text-center mb-4">
-        <Button variant="danger" onClick={handleLogout}>
-          Logout
-        </Button>
-      </div>
-      
-      {/* Use absolute paths so we don't keep nesting */}
-      <div className="text-center mb-4">
-        <Link to="/dashboard/passes" style={{ marginRight: 16 }}>
-          Passes Panel
-        </Link>
-        <Link to="/dashboard/balance">
-          User Balance &amp; History
-        </Link>
-      </div>
-
-      <Outlet />
-    </Container>
-  );
+  if (normalizedUserType === "normal") {
+    return (
+      <UserDashboard
+        user={user}
+        setIsAuthenticated={setIsAuthenticated}
+        setUser={setUser}
+      />
+    );
+  } else if (normalizedUserType === "analyst") {
+    return (
+      <AnalystDashboard
+        user={user}
+        setIsAuthenticated={setIsAuthenticated}
+      />
+    );
+  } else {
+    // For any type that isn't "normal" or "analyst", assume it's an operator.
+    return (
+      <OperatorDashboard
+        user={user}
+        setIsAuthenticated={setIsAuthenticated}
+      />
+    );
+  }
 }
+
+export default Dashboard;
+
+
 
 
 

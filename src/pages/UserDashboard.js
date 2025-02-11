@@ -1,14 +1,15 @@
 // src/pages/UserDashboard.js
 import React from 'react';
 import { Container, Button } from 'react-bootstrap';
-import { Link, useNavigate, Outlet } from 'react-router-dom';
+import { Link, Outlet, useNavigate } from 'react-router-dom';
 
-const UserDashboard = ({ user, setIsAuthenticated }) => {
+const UserDashboard = ({ user, setIsAuthenticated, setUser }) => {
   const navigate = useNavigate();
 
   const handleLogout = () => {
     localStorage.removeItem('authToken');
     setIsAuthenticated(false);
+    setUser(null);
     navigate('/');
   };
 
@@ -22,35 +23,30 @@ const UserDashboard = ({ user, setIsAuthenticated }) => {
         </Button>
       </div>
 
-      {/* Navigation links for normal user actions */}
+      {/* Use ABSOLUTE paths to avoid stacking / nesting issues */}
       <div className="text-center mb-4">
         <Link
-          to="passes"
-          style={{
-            marginRight: '1rem',
-            fontSize: '1.1rem',
-            textDecoration: 'none'
-          }}
+          to="/dashboard/passes"
+          style={{ marginRight: '1rem', fontSize: '1.1rem', textDecoration: 'none' }}
         >
           Passes Panel
         </Link>
         <Link
-          to="balance"
-          style={{
-            fontSize: '1.1rem',
-            textDecoration: 'none'
-          }}
+          to="/dashboard/balance"
+          style={{ fontSize: '1.1rem', textDecoration: 'none' }}
         >
           User Balance &amp; History
         </Link>
       </div>
 
-      {/* Nested routes will render here */}
+      {/* Nested routes (passes or balance) will render here */}
       <Outlet />
     </Container>
   );
 };
 
 export default UserDashboard;
+
+
 
 

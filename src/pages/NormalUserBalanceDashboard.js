@@ -22,10 +22,8 @@ function NormalUserBalanceDashboard() {
     setError(null);
     setResult(null);
     try {
-      // Format dates from the input values.
       const formattedFromDate = formatDate(dateFrom);
       const formattedToDate = formatDate(dateTo);
-
       const response = await axios.get(
         `http://localhost:3000/api/analytics/user?fromDate=${formattedFromDate}&toDate=${formattedToDate}`,
         { headers: { Authorization: `Bearer ${token}` } }
@@ -66,13 +64,17 @@ function NormalUserBalanceDashboard() {
       </Button>
       {loading && <Spinner animation="border" className="mt-2" />}
       {error && <Alert variant="danger" className="mt-2">{error}</Alert>}
-      {result && (
+      {result ? (
         <Card className="mt-2">
           <Card.Body>
             <h6>User Balance: {result.balance}</h6>
             <pre>{JSON.stringify(result.history, null, 2)}</pre>
           </Card.Body>
         </Card>
+      ) : (
+        <div className="text-center mt-2">
+          Please enter dates and click the button to view balance and history.
+        </div>
       )}
     </Container>
   );
