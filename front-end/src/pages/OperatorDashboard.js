@@ -13,7 +13,7 @@ const OperatorDashboard = ({ user, setIsAuthenticated }) => {
         const fetchSettlements = async () => {
             try {
                 const token = localStorage.getItem('authToken');
-                const response = await fetch("http://localhost:3000/api/analytics/settlements", {
+                const response = await fetch("http://localhost:9115/api/analytics/settlements", {
                     method: "GET",
                     headers: { "Authorization": `Bearer ${token}` }
                 });

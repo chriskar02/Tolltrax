@@ -21,7 +21,7 @@ const TollStationPassesSection = () => {
     setTsResult(null);
     try {
       const response = await axios.get(
-        `http://localhost:3000/api/tollStationPasses/${tollStationID}/${tsDateFrom}/${tsDateTo}`,
+        `http://localhost:9115/api/tollStationPasses/${tollStationID}/${tsDateFrom}/${tsDateTo}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setTsResult(response.data);
@@ -102,7 +102,7 @@ const PassAnalysisSection = () => {
     try {
       // /passAnalysis/:stationOpID/:tagOpID/:date_from/:date_to
       const response = await axios.get(
-        `http://localhost:3000/api/passAnalysis/${stationOpID}/${tagOpID}/${dateFrom}/${dateTo}`,
+        `http://localhost:9115/api/passAnalysis/${stationOpID}/${tagOpID}/${dateFrom}/${dateTo}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setResult(response.data);
@@ -194,7 +194,7 @@ const PassesCostSection = () => {
     try {
       // /passesCost/:tollOpID/:tagOpID/:date_from/:date_to
       const response = await axios.get(
-        `http://localhost:3000/api/passesCost/${tollOpID}/${tagOpID}/${dateFrom}/${dateTo}`,
+        `http://localhost:9115/api/passesCost/${tollOpID}/${tagOpID}/${dateFrom}/${dateTo}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setResult(response.data);
@@ -285,7 +285,7 @@ const ChargesBySection = () => {
     try {
       // /chargesBy/:tollOpID/:date_from/:date_to
       const response = await axios.get(
-        `http://localhost:3000/api/chargesBy/${tollOpID}/${dateFrom}/${dateTo}`,
+        `http://localhost:9115/api/chargesBy/${tollOpID}/${dateFrom}/${dateTo}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setResult(response.data);

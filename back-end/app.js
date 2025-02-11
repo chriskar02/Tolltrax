@@ -26,6 +26,9 @@ initializeDatabase()
     const adminRoutes = require("./routes/admin");
     app.use("/api", adminRoutes);
 
+    const analyticsRoutes = require("./routes/analytics");
+    app.use("/api/analytics", analyticsRoutes);
+
     // Catch-all route for debugging
     app.use("*", (req, res) => {
       console.log(`Received request for ${req.originalUrl}`);

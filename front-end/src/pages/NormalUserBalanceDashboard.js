@@ -25,7 +25,7 @@ function NormalUserBalanceDashboard() {
       const formattedFromDate = formatDate(dateFrom);
       const formattedToDate = formatDate(dateTo);
       const response = await axios.get(
-        `http://localhost:3000/api/analytics/user?fromDate=${formattedFromDate}&toDate=${formattedToDate}`,
+        `http://localhost:9115/api/analytics/user?fromDate=${formattedFromDate}&toDate=${formattedToDate}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setResult(response.data);

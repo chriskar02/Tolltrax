@@ -20,7 +20,7 @@ export default function AdminPanel() {
     setLoading(true)
     setMessage(null)
     try {
-      const response = await axios.post("http://localhost:3000/api/admin/resetstations")
+      const response = await axios.post("http://localhost:9115/api/admin/resetstations")
       setMessage(response.data.status === "OK" ? "Stations reset successfully!" : response.data.info)
     } catch (error) {
       setMessage("Error resetting stations: " + (error instanceof Error ? error.message : String(error)))
@@ -33,7 +33,7 @@ export default function AdminPanel() {
     setLoading(true)
     setMessage(null)
     try {
-      const response = await axios.post("http://localhost:3000/api/admin/resetpasses")
+      const response = await axios.post("http://localhost:9115/api/admin/resetpasses")
       setMessage(response.data.status === "OK" ? "Passes reset successfully!" : response.data.info)
     } catch (error) {
       setMessage("Error resetting passes: " + (error instanceof Error ? error.message : String(error)))
@@ -46,7 +46,7 @@ export default function AdminPanel() {
     setLoading(true)
     setMessage(null)
     try {
-      const response = await axios.post("http://localhost:3000/api/admin/addpasses")
+      const response = await axios.post("http://localhost:9115/api/admin/addpasses")
       setMessage(
         response.data.status === "OK"
           ? `Passes added successfully! New passes: ${response.data.newPasses}`
@@ -64,7 +64,7 @@ export default function AdminPanel() {
     setMessage(null)
     setHealthData(null)
     try {
-      const response = await axios.get("http://localhost:3000/api/admin/healthcheck")
+      const response = await axios.get("http://localhost:9115/api/admin/healthcheck")
       if (response.data.status === "OK") {
         setHealthData(response.data)
         setMessage("Healthcheck completed successfully!")
@@ -82,7 +82,7 @@ export default function AdminPanel() {
     setLoading(true)
     setMessage(null)
     try {
-      const response = await axios.post("http://localhost:3000/api/admin/resetusers")
+      const response = await axios.post("http://localhost:9115/api/admin/resetusers")
       setMessage(response.data.status === "OK" ? "Users populated successfully!" : response.data.info)
     } catch (error) {
       setMessage("Error populating users: " + (error instanceof Error ? error.message : String(error)))
@@ -95,7 +95,7 @@ export default function AdminPanel() {
     setLoading(true)
     setMessage(null)
     try {
-      const response = await axios.post("http://localhost:3000/api/admin/resetvehicles")
+      const response = await axios.post("http://localhost:9115/api/admin/resetvehicles")
       setMessage(response.data.status === "OK" ? "Vehicles populated successfully!" : response.data.info)
     } catch (error) {
       setMessage("Error populating vehicles: " + (error instanceof Error ? error.message : String(error)))

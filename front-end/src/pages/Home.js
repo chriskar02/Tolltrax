@@ -23,10 +23,10 @@ const HomePage = ({ setIsAuthenticated }) => {
     <div className="container mt-5 text-center">
       <h1>Welcome to TollTrax</h1>
       <p>Your one-stop solution for toll management.</p>
-      
+
       {/* Logout Button */}
-      <button 
-        onClick={handleLogout} 
+      <button
+        onClick={handleLogout}
         className="btn btn-danger mt-4"
       >
         Logout

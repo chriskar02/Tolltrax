@@ -33,7 +33,7 @@ const AnalystDashboard = ({ user, setIsAuthenticated }) => {
     setError('');
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch('http://localhost:3000/api/analytics/admin/station-popularity', {
+      const response = await fetch('http://localhost:9115/api/analytics/admin/station-popularity', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
