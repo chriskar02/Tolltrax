@@ -1,26 +1,36 @@
 // src/App.js
 import React, { useState, useEffect } from 'react';
-import { useLocation, BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import {
+  BrowserRouter as Router,
+  Route,
+  Routes,
+  Navigate,
+  useLocation
+} from 'react-router-dom';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import Login from './components/Login';
-import Dashboard from './pages/Dashboard'; // Component that selects the correct dashboard based on role
+import UserDashboard from './pages/UserDashboard'; // Normal user layout
+import AnalystDashboard from './pages/AnalystDashboard';
+import OperatorDashboard from './pages/OperatorDashboard';
+import NormalUserPassesDashboard from './pages/NormalUserPassesDashboard';
+import NormalUserBalanceDashboard from './pages/NormalUserBalanceDashboard';
 import axios from 'axios';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState(null); // Will hold { username, type } once logged in
+  const [user, setUser] = useState(null); 
   const [loading, setLoading] = useState(true);
 
-  // Check for a valid token and update user state on app load.
   useEffect(() => {
     const checkAuth = async () => {
       const token = localStorage.getItem('authToken');
       if (token) {
         try {
-          const response = await axios.get('http://localhost:9115/api/verify-token', {
-            headers: { Authorization: `Bearer ${token}` },
-          });
+          const response = await axios.get(
+            'http://localhost:3000/api/auth/verify-token',
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
           if (response.data.user) {
             setUser(response.data.user);
             setIsAuthenticated(true);
@@ -41,7 +51,6 @@ function App() {
       }
       setLoading(false);
     };
-
     checkAuth();
   }, []);
 
@@ -49,27 +58,82 @@ function App() {
     return <div>Loading...</div>;
   }
 
+  const normalizedUserType = user && user.type
+    ? user.type.toLowerCase().trim()
+    : '';
+
   return (
     <Router>
       <div className="App">
-        <ConditionalHeader setIsAuthenticated={setIsAuthenticated} setUser={setUser} />
+        <ConditionalHeader
+          setIsAuthenticated={setIsAuthenticated}
+          setUser={setUser}
+        />
         <Routes>
+          {/* LOGIN OR REDIRECT */}
           <Route
             path="/"
             element={
-              isAuthenticated
-                ? <Navigate to="/dashboard" replace />
-                : <Login setIsAuthenticated={setIsAuthenticated} setUser={setUser} />
+              isAuthenticated ? (
+                <Navigate to="/dashboard" replace />
+              ) : (
+                <Login
+                  setIsAuthenticated={setIsAuthenticated}
+                  setUser={setUser}
+                />
+              )
             }
           />
-          <Route
-            path="/dashboard"
-            element={
-              isAuthenticated && user
-                ? <Dashboard user={user} setIsAuthenticated={setIsAuthenticated} setUser={setUser} />
-                : <Navigate to="/" replace />
-            }
-          />
+
+          {/* NORMAL USER DASHBOARD WITH NESTED ROUTES */}
+          {isAuthenticated && user && normalizedUserType === "normal" && (
+            <Route path="/dashboard/*" element={
+              <UserDashboard
+                user={user}
+                setIsAuthenticated={setIsAuthenticated}
+                setUser={setUser}
+              />
+            }>
+              <Route path="passes" element={<NormalUserPassesDashboard />} />
+              <Route path="balance" element={<NormalUserBalanceDashboard />} />
+              <Route index element={
+                <div className="text-center">
+                  Select an option above.
+                </div>
+              } />
+            </Route>
+          )}
+
+          {/* ANALYST */}
+          {isAuthenticated && user && normalizedUserType === "analyst" && (
+            <Route
+              path="/dashboard"
+              element={
+                <AnalystDashboard
+                  user={user}
+                  setIsAuthenticated={setIsAuthenticated}
+                />
+              }
+            />
+          )}
+
+          {/* OPERATOR (DEFAULT FOR ANY OTHER TYPE) */}
+          {isAuthenticated && user &&
+           normalizedUserType !== "normal" &&
+           normalizedUserType !== "analyst" && (
+            <Route
+              path="/dashboard"
+              element={
+                <OperatorDashboard
+                  user={user}
+                  setIsAuthenticated={setIsAuthenticated}
+                />
+              }
+            />
+          )}
+
+          {/* FALLBACK */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         <Footer />
       </div>
@@ -77,7 +141,6 @@ function App() {
   );
 }
 
-// ConditionalHeader renders the header only on routes other than the login page.
 function ConditionalHeader({ setIsAuthenticated, setUser }) {
   const location = useLocation();
   const noHeaderRoutes = ['/'];
@@ -88,6 +151,7 @@ function ConditionalHeader({ setIsAuthenticated, setUser }) {
 }
 
 export default App;
+
 
 
 
