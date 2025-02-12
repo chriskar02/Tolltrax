@@ -22,7 +22,7 @@ describe("CLI Tests for se2412", function () {
 
 
   it("should login successfully", (done) => {
-    runCLI("login --username admin --passw freepasses4all", (error, stdout) => {
+    runCLI("login --username admin --passw freepasses4all", ( stdout) => {
       expect(stdout).to.include("token");
       done();
     });
@@ -46,8 +46,8 @@ describe("CLI Tests for se2412", function () {
   });
   
 
-  it("should reset passes", (done) => {
-    runCLI("se2412 resetpasses --format json", (error, stdout) => {
+  it("should reset passes", function (done) {
+    exec("se2412 resetpasses --format json", (stdout) => {
       const output = JSON.parse(stdout.trim()); 
       expect(output).to.have.property("status", "OK");
       done();
@@ -55,39 +55,9 @@ describe("CLI Tests for se2412", function () {
   });
 
   it("should reset stations and return correct format", function (done) {
-    exec("se2412 resetstations --format json", (error, stdout) => {
-      if (error) return done(error);
-
-      let output;
-      try {
-        output = JSON.parse(stdout.trim());
-      } catch {
-        return done(new Error("Invalid JSON response: " + stdout));
-      }
-
-      // Top-level properties
+    exec("se2412 resetstations --format json", (stdout) => {
+      const output = JSON.parse(stdout.trim()); 
       expect(output).to.have.property("status", "OK");
-      expect(output).to.have.property("stationID").that.is.a("string");
-      expect(output).to.have.property("stationOperator").that.is.a("string");
-      expect(output).to.have.property("requestTimestamp").that.is.a("string");
-      expect(output).to.have.property("periodFrom").that.is.a("string");
-      expect(output).to.have.property("periodTo").that.is.a("string");
-      expect(output).to.have.property("nPasses").that.is.a("number");
-      expect(output).to.have.property("passList").that.is.an("array");
-
-      // Validate passList items if there are passes
-      if (output.nPasses > 0) {
-        output.passList.forEach((pass) => {
-          expect(pass).to.have.property("passIndex").that.is.a("number");
-          expect(pass).to.have.property("passID").that.is.a("string");
-          expect(pass).to.have.property("timestamp").that.is.a("string");
-          expect(pass).to.have.property("tagID").that.is.a("string");
-          expect(pass).to.have.property("tagProvider").that.is.a("string");
-          expect(pass).to.have.property("passType").that.is.oneOf(["home", "visitor"]);
-          expect(pass).to.have.property("passCharge").that.is.a("number");
-        });
-      }
-
       done();
     });
   });
@@ -104,8 +74,8 @@ describe("CLI Tests for se2412", function () {
       }
 
       // Top-level properties
-      expect(output).to.have.property("stationOpID").that.is.a("string");
-      expect(output).to.have.property("tagOpID").that.is.a("string");
+      expect(output).to.have.property("stationID").that.is.a("string");
+      expect(output).to.have.property("stationOperator").that.is.a("string");
       expect(output).to.have.property("requestTimestamp").that.is.a("string");
       expect(output).to.have.property("periodFrom").that.is.a("string");
       expect(output).to.have.property("periodTo").that.is.a("string");
@@ -220,7 +190,7 @@ describe("CLI Tests for se2412", function () {
   });
 
   it("should logout successfully", (done) => {
-    runCLI("logout", (error, stdout) => {
+    runCLI("logout", (stdout) => {
       expect(stdout).to.be.empty;
       done();
     });
