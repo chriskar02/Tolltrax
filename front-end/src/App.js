@@ -31,7 +31,7 @@ function App() {
           // Using port 9115 with the custom header format
           const response = await axios.get(
             'http://localhost:9115/api/verify-token',
-            { headers: { 'x-observatory-auth': `Bearer ${token}` } }
+            { headers: { 'x-observatory-auth': token } }
           );
           if (response.data.user) {
             setUser(response.data.user);

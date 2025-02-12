@@ -27,7 +27,7 @@ function NormalUserBalanceDashboard() {
       const response = await axios.get(
         `http://localhost:9115/api/user?fromDate=${formattedFromDate}&toDate=${formattedToDate}`,
         {
-          headers: { 'x-observatory-auth': `Bearer ${token}` }
+          headers: { 'x-observatory-auth': token }
         }
       );
       setResult(response.data);

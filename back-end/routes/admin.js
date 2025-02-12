@@ -7,9 +7,12 @@ const iconv = require("iconv-lite")
 const csv = require("csv-parser")
 const bcrypt = require("bcrypt")
 const saltRounds = 10
-const jwt = require("jsonwebtoken")
+const { authenticateToken } = require("./auth")
 
 const pool = getPool() // Get the shared pool instance
+
+// Apply the authentication middleware to all routes in this router
+router.use(authenticateToken);
 
 
 // Helper function for transactions
@@ -300,19 +303,23 @@ router.get("/admin/healthcheck", async (req, res) => {
 
     client.release()
     const healthcheck = {
+      status: OK,
       dbconnection: connectionString,
       n_stations,
       n_tags,
       n_passes
     };
 
-    formatResponse(req, res, { status: "OK", ...healthcheck });
+    formatResponse(req, res, { "status": "OK", healthcheck });
   } catch (err) {
-    const reason = {
-      dbconnection: `postgresql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`
+    const connectionString = `postgresql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`;
+
+    const errorData = {
+      status: "failed",
+      dbconnection: connectionString,
     };
 
-    formatResponse(req, res, { status: "failed", info: reason }, 500);
+    formatResponse(req, res, errorData, 500);
   }
 })
 

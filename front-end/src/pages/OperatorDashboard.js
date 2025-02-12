@@ -29,7 +29,7 @@ const OperatorDashboard = ({ user, setIsAuthenticated }) => {
       // Note: endpoint adjusted to match your backend analytics routes mounted on /api
       const response = await fetch('http://localhost:9115/api/settlements', {
         method: 'GET',
-        headers: { 'x-observatory-auth': `Bearer ${token}` },
+        headers: { 'x-observatory-auth': token },
       });
       if (!response.ok) throw new Error('Failed to fetch settlements.');
       const data = await response.json();
@@ -65,7 +65,7 @@ const OperatorDashboard = ({ user, setIsAuthenticated }) => {
 
       const response = await fetch(url, {
         method: 'GET',
-        headers: { 'x-observatory-auth': `Bearer ${token}` },
+        headers: { 'x-observatory-auth': token },
       });
       if (!response.ok) {
         throw new Error(`Error fetching station popularity: ${response.status}`);
@@ -100,7 +100,7 @@ const OperatorDashboard = ({ user, setIsAuthenticated }) => {
 
       const response = await fetch(url, {
         method: 'GET',
-        headers: { 'x-observatory-auth': `Bearer ${token}` },
+        headers: { 'x-observatory-auth': token },
       });
       if (!response.ok) {
         throw new Error(`Error fetching vehicle rankings: ${response.status}`);

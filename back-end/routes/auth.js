@@ -6,6 +6,9 @@ const router = express.Router();
 
 const SECRET_KEY = process.env.JWT_SECRET;
 
+//Support for application/x-www-form-urlencoded
+router.use(express.urlencoded({ extended: true }));
+
 // User Login
 router.post("/login", async (req, res) => {
     const { username, password } = req.body;
@@ -37,7 +40,7 @@ router.post("/login", async (req, res) => {
             { expiresIn: process.env.JWT_EXPIRATION || "2h" }
         );
 
-        return res.json({ status: "OK", token });
+        return res.json({ token });
     } catch (error) {
         console.error("Login error:", error);
         return res.status(500).json({ status: "failed", info: "Internal server error" });
@@ -47,8 +50,7 @@ router.post("/login", async (req, res) => {
 
 // Verify Token
 router.get("/verify-token", (req, res) => {
-    const authHeader = req.headers['x-observatory-auth'];
-    const token = authHeader && authHeader.split(" ")[1];
+    const token = req.headers['x-observatory-auth'];
 
     if (!token) {
         return res.status(401).json({ error: "Authentication token required" });
@@ -56,15 +58,14 @@ router.get("/verify-token", (req, res) => {
 
     jwt.verify(token, SECRET_KEY, (err, decoded) => {
         if (err) {
-            return res.status(403).json({ error: "Invalid or expired token" });
+            return res.status(500).json({ error: "Invalid or expired token" });
         }
         return res.json({ message: "Token is valid", user: decoded });
     });
 });
 
-// Logout (Handled client-side)
+// Logout
 router.post("/logout", (req, res) => {
-    // Retrieve the token from the custom header:
     const token = req.headers['x-observatory-auth'];
     if (!token) {
         return res.status(401).json({ error: "Authentication token required" });
@@ -76,9 +77,7 @@ router.post("/logout", (req, res) => {
 //Middleware auth functions
 
 function authenticateToken(req, res, next) {
-    const authHeader = req.headers['x-observatory-auth'];
-    // Expecting header in the format "Bearer <token>"
-    const token = authHeader && authHeader.split(" ")[1];
+    const token = req.headers['x-observatory-auth'];
 
     if (!token) {
         return res.status(401).json({ error: "Authentication token required" });
@@ -86,7 +85,7 @@ function authenticateToken(req, res, next) {
 
     jwt.verify(token, SECRET_KEY, (err, decoded) => {
         if (err) {
-            return res.status(403).json({ error: "Invalid or expired token" });
+            return res.status(500).json({ error: "Invalid or expired token" });
         }
         req.user = decoded; // decoded token should include at least username and type
         next();
@@ -103,7 +102,7 @@ function isOperator(userType) {
 function checkRole(allowedRoles) {
     return (req, res, next) => {
         if (!req.user) {
-            return res.status(403).json({ error: "Access denied" });
+            return res.status(401).json({ error: "Access denied" });
         }
         const userType = req.user.type;
         // Check if "operator" is allowed and the user is an operator based on their type.
@@ -114,7 +113,7 @@ function checkRole(allowedRoles) {
         if (allowedRoles.includes(userType)) {
             return next();
         }
-        return res.status(403).json({ error: "Access denied" });
+        return res.status(401).json({ error: "Access denied" });
     };
 }
 

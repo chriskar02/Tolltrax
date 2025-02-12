@@ -39,7 +39,7 @@ const AnalystDashboard = ({ user, setIsAuthenticated }) => {
         headers: {
           'Content-Type': 'application/json',
           // Use the custom header with Bearer token
-          'x-observatory-auth': `Bearer ${token}`,
+          'x-observatory-auth': token,
         },
       });
 

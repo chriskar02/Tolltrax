@@ -32,7 +32,7 @@ initializeDatabase()
     // Catch-all route for debugging
     app.use("*", (req, res) => {
       console.log(`Received request for ${req.originalUrl}`);
-      res.status(404).json({ error: "Route not found" });
+      res.status(500).json({ error: "Route not found" }); //would be 404 if given the option in the project desc
     });
 
     app.listen(port, () => {
