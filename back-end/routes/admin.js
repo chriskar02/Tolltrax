@@ -289,34 +289,30 @@ router.post("/admin/addpasses", async (req, res) => {
 // Healthcheck
 router.get("/admin/healthcheck", async (req, res) => {
   try {
-    const client = await pool.connect()
+    await runTransaction(async (client) => {
+      // Execute your checks within the transaction
+      const stationsResult = await client.query("SELECT COUNT(*) FROM toll_station");
+      const tagsResult = await client.query("SELECT COUNT(*) FROM transceiver");
+      const passesResult = await client.query("SELECT COUNT(*) FROM passthrough");
 
-    const stationsResult = await client.query("SELECT COUNT(*) FROM toll_station")
-    const tagsResult = await client.query("SELECT COUNT(*) FROM transceiver")
-    const passesResult = await client.query("SELECT COUNT(*) FROM passthrough")
+      // Build connection string for reporting purposes
+      const connectionString = `postgresql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`;
 
-    const n_stations = Number.parseInt(stationsResult.rows[0].count)
-    const n_tags = Number.parseInt(tagsResult.rows[0].count)
-    const n_passes = Number.parseInt(passesResult.rows[0].count)
-
-    const connectionString = `postgresql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`
-
-    client.release()
-    const healthcheck = {
-      status: OK,
-      dbconnection: connectionString,
-      n_stations,
-      n_tags,
-      n_passes
-    };
-
-    formatResponse(req, res, { "status": "OK", healthcheck });
+      // Return the health check data using your formatResponse helper
+      formatResponse(req, res, {
+        "status": "OK",
+        "dbconnection": connectionString,
+        "n_stations": parseInt(stationsResult.rows[0].count, 10),
+        "n_tags": parseInt(tagsResult.rows[0].count, 10),
+        "n_passes": parseInt(passesResult.rows[0].count, 10)
+      });
+    });
   } catch (err) {
     const connectionString = `postgresql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`;
 
     const errorData = {
-      status: "failed",
-      dbconnection: connectionString,
+      "status": "failed",
+      "dbconnection": connectionString,
     };
 
     formatResponse(req, res, errorData, 500);
