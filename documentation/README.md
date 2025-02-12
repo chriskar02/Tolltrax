@@ -1,12 +1,12 @@
 # Documentation
 
-Ενδεικτικά περιεχόμενα:
+vpp file που περιέχει:
+- Διαγράμματα UML Activity
+- Διαγράμματα UML Class
+- Διαγράμματα UML Component
+- Διαγράμματα UML Deployment
+- Διαγράμματα UML Sequence
+- Διάγραμμα ER
 
-- Διαγράμματα UML Activity (in ONE vpp file).
-- Διαγράμματα UML Class (in ONE vpp file).
-- Διαγράμματα UML Component (in ONE vpp file).
-- Διαγράμματα UML Deployment (in ONE vpp file).
-- Διαγράμματα UML Sequence (in ONE vpp file).
-- Διαγράμματα ER.
-- Εγγραφο SRS - Software Requirements Specification.
-- Εγγραφο StRS - Stakeholders Requirements Specification.
+και  
+- Εγγραφο SRS - Software Requirements Specification σε editable μορφή
