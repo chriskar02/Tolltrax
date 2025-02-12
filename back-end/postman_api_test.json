@@ -1,8 +1,8 @@
 {
     "info": {
-        "_postman_id": "6543210a-1234-4bcd-9876-abcdef123456",
+        "_postman_id": "aabbccdd-eeff-1122-3344-556677889900",
         "name": "API Testing Collection",
-        "description": "Collection for testing API calls for different routes",
+        "description": "This collection tests admin routes (with and without login), normal routes without credentials and analytic routes using various credentials(normal, operator, admin, analyst).",
         "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
     },
     "variable": [
@@ -12,6 +12,10 @@
         },
         {
             "key": "adminToken",
+            "value": ""
+        },
+        {
+            "key": "analyticToken",
             "value": ""
         },
         {
@@ -37,62 +41,62 @@
     ],
     "item": [
         {
-            "name": "Admin Login",
-            "request": {
-                "method": "POST",
-                "header": [
-                    {
-                        "key": "Content-Type",
-                        "value": "application/x-www-form-urlencoded"
-                    }
-                ],
-                "body": {
-                    "mode": "urlencoded",
-                    "urlencoded": [
-                        {
-                            "key": "username",
-                            "value": "admin",
-                            "type": "text"
+            "name": "Admin Routes",
+            "item": [
+                {
+                    "name": "Admin Login",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/x-www-form-urlencoded"
+                            }
+                        ],
+                        "body": {
+                            "mode": "urlencoded",
+                            "urlencoded": [
+                                {
+                                    "key": "username",
+                                    "value": "admin",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "password",
+                                    "value": "freepasses4all",
+                                    "type": "text"
+                                }
+                            ]
                         },
+                        "url": {
+                            "raw": "{{base_url}}/login",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "login"
+                            ]
+                        }
+                    },
+                    "event": [
                         {
-                            "key": "password",
-                            "value": "freepasses4all",
-                            "type": "text"
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('Admin Login returns 200', function() {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "var jsonData = pm.response.json();",
+                                    "pm.test('Token is returned', function() {",
+                                    "    pm.expect(jsonData).to.have.property('token');",
+                                    "});",
+                                    "pm.environment.set('adminToken', jsonData.token);"
+                                ]
+                            }
                         }
                     ]
                 },
-                "url": {
-                    "raw": "{{base_url}}/login",
-                    "host": [
-                        "{{base_url}}"
-                    ],
-                    "path": [
-                        "login"
-                    ]
-                }
-            },
-            "event": [
-                {
-                    "listen": "test",
-                    "script": {
-                        "type": "text/javascript",
-                        "exec": [
-                            "pm.test('Admin Login returns status 200', function() {",
-                            "    pm.response.to.have.status(200);",
-                            "});",
-                            "var jsonData = pm.response.json();",
-                            "pm.test('Admin token is returned', function() {",
-                            "    pm.expect(jsonData).to.have.property('token');",
-                            "});",
-                            "pm.environment.set('adminToken', jsonData.token);"
-                        ]
-                    }
-                }
-            ]
-        },
-        {
-            "name": "Admin Routes - With Admin Login",
-            "item": [
                 {
                     "name": "Healthcheck - Admin",
                     "request": {
@@ -126,7 +130,7 @@
                             "script": {
                                 "type": "text/javascript",
                                 "exec": [
-                                    "pm.test('Admin Healthcheck returns status 200', function() {",
+                                    "pm.test('Admin Healthcheck returns 200', function() {",
                                     "    pm.response.to.have.status(200);",
                                     "});"
                                 ]
@@ -175,7 +179,7 @@
                             "script": {
                                 "type": "text/javascript",
                                 "exec": [
-                                    "pm.test('Reset Passes with admin token returns 200', function() {",
+                                    "pm.test('Reset Passes (admin) returns 200', function() {",
                                     "    pm.response.to.have.status(200);",
                                     "});"
                                 ]
@@ -224,7 +228,7 @@
                             "script": {
                                 "type": "text/javascript",
                                 "exec": [
-                                    "pm.test('Reset Stations with admin token returns 200', function() {",
+                                    "pm.test('Reset Stations (admin) returns 200', function() {",
                                     "    pm.response.to.have.status(200);",
                                     "});"
                                 ]
@@ -267,7 +271,7 @@
                             "script": {
                                 "type": "text/javascript",
                                 "exec": [
-                                    "pm.test('User Modification with admin token returns success', function() {",
+                                    "pm.test('User Modification (admin) returns success', function() {",
                                     "    pm.response.to.have.status(200);",
                                     "    var res = pm.response.json();",
                                     "    pm.expect(res.status).to.be.oneOf(['success','OK']);",
@@ -304,7 +308,7 @@
                             "script": {
                                 "type": "text/javascript",
                                 "exec": [
-                                    "pm.test('List Users with admin token returns usernames array', function() {",
+                                    "pm.test('List Users (admin) returns usernames array', function() {",
                                     "    pm.response.to.have.status(200);",
                                     "    var res = pm.response.json();",
                                     "    pm.expect(res).to.have.property('usernames');",
@@ -349,7 +353,7 @@
                             "script": {
                                 "type": "text/javascript",
                                 "exec": [
-                                    "pm.test('Add Passes with admin token returns success', function() {",
+                                    "pm.test('Add Passes (admin) returns success', function() {",
                                     "    pm.response.to.have.status(200);",
                                     "});"
                                 ]
@@ -360,47 +364,43 @@
             ]
         },
         {
-            "name": "Logout",
-            "request": {
-                "method": "POST",
-                "header": [
-                    {
-                        "key": "Content-Type",
-                        "value": "application/json"
-                    },
-                    {
-                        "key": "x-observatory-auth",
-                        "value": "{{adminToken}}"
-                    }
-                ],
-                "url": {
-                    "raw": "{{base_url}}/logout",
-                    "host": [
-                        "{{base_url}}"
-                    ],
-                    "path": [
-                        "logout"
-                    ]
-                }
-            },
-            "event": [
-                {
-                    "listen": "test",
-                    "script": {
-                        "type": "text/javascript",
-                        "exec": [
-                            "pm.test('Logout returns success', function() {",
-                            "    pm.response.to.have.status(200);",
-                            "});",
-                            "pm.environment.unset('adminToken');"
-                        ]
-                    }
-                }
-            ]
-        },
-        {
             "name": "Admin Routes - Without Login",
             "item": [
+                {
+                    "name": "Logout",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "x-observatory-auth",
+                                "value": "{{adminToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/logout",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "logout"
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('Logout returns success', function() {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "pm.environment.unset('adminToken');"
+                                ]
+                            }
+                        }
+                    ]
+                },
                 {
                     "name": "Healthcheck - Admin No Token",
                     "request": {
@@ -800,6 +800,511 @@
                                     "});"
                                 ]
                             }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Analytic Routes",
+            "item": [
+                {
+                    "name": "Analytics - Normal",
+                    "item": [
+                        {
+                            "name": "Login - Analytics Normal",
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/x-www-form-urlencoded"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "urlencoded",
+                                    "urlencoded": [
+                                        {
+                                            "key": "username",
+                                            "value": "normal0000",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "password",
+                                            "value": "ZAnGh8otFk",
+                                            "type": "text"
+                                        }
+                                    ]
+                                },
+                                "url": {
+                                    "raw": "{{base_url}}/login",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "login"
+                                    ]
+                                }
+                            },
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "type": "text/javascript",
+                                        "exec": [
+                                            "pm.test('Analytics Normal Login returns 200', function() {",
+                                            "    pm.response.to.have.status(200);",
+                                            "});",
+                                            "var jsonData = pm.response.json();",
+                                            "pm.test('Token is returned', function() {",
+                                            "    pm.expect(jsonData).to.have.property('token');",
+                                            "});",
+                                            "pm.environment.set('analyticToken', jsonData.token);"
+                                        ]
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Analytics User",
+                            "request": {
+                                "method": "GET",
+                                "header": [
+                                    {
+                                        "key": "x-observatory-auth",
+                                        "value": "{{analyticToken}}"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{base_url}}/analytics/user?fromDate=1970-01-01&toDate=3000-01-01",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "analytics",
+                                        "user"
+                                    ],
+                                    "query": [
+                                        {
+                                            "key": "fromDate",
+                                            "value": "1970-01-01"
+                                        },
+                                        {
+                                            "key": "toDate",
+                                            "value": "3000-01-01"
+                                        }
+                                    ]
+                                }
+                            },
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "type": "text/javascript",
+                                        "exec": [
+                                            "pm.test('Analytics User endpoint returns 200', function() {",
+                                            "    pm.response.to.have.status(200);",
+                                            "});"
+                                        ]
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "Analytics - Operator",
+                    "item": [
+                        {
+                            "name": "Login - Analytics Operator",
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/x-www-form-urlencoded"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "urlencoded",
+                                    "urlencoded": [
+                                        {
+                                            "key": "username",
+                                            "value": "NAO0001",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "password",
+                                            "value": "o5J6erb0I7",
+                                            "type": "text"
+                                        }
+                                    ]
+                                },
+                                "url": {
+                                    "raw": "{{base_url}}/login",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "login"
+                                    ]
+                                }
+                            },
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "type": "text/javascript",
+                                        "exec": [
+                                            "pm.test('Analytics Operator Login returns 200', function() {",
+                                            "    pm.response.to.have.status(200);",
+                                            "});",
+                                            "var jsonData = pm.response.json();",
+                                            "pm.test('Token is returned', function() {",
+                                            "    pm.expect(jsonData).to.have.property('token');",
+                                            "});",
+                                            "pm.environment.set('analyticToken', jsonData.token);"
+                                        ]
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Operator Station Popularity",
+                            "request": {
+                                "method": "GET",
+                                "header": [
+                                    {
+                                        "key": "x-observatory-auth",
+                                        "value": "{{analyticToken}}"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{base_url}}/analytics/operator/station-popularity?fromDate=1970-01-01&toDate=3000-01-01",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "analytics",
+                                        "operator",
+                                        "station-popularity"
+                                    ],
+                                    "query": [
+                                        {
+                                            "key": "fromDate",
+                                            "value": "1970-01-01"
+                                        },
+                                        {
+                                            "key": "toDate",
+                                            "value": "3000-01-01"
+                                        }
+                                    ]
+                                }
+                            },
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "type": "text/javascript",
+                                        "exec": [
+                                            "pm.test('Operator Station Popularity returns 200', function() {",
+                                            "    pm.response.to.have.status(200);",
+                                            "});"
+                                        ]
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Operator Vehicle Type Rank",
+                            "request": {
+                                "method": "GET",
+                                "header": [
+                                    {
+                                        "key": "x-observatory-auth",
+                                        "value": "{{analyticToken}}"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{base_url}}/analytics/operator/vehicle-type-rank?fromDate=1970-01-01&toDate=3000-01-01",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "analytics",
+                                        "operator",
+                                        "vehicle-type-rank"
+                                    ],
+                                    "query": [
+                                        {
+                                            "key": "fromDate",
+                                            "value": "1970-01-01"
+                                        },
+                                        {
+                                            "key": "toDate",
+                                            "value": "3000-01-01"
+                                        }
+                                    ]
+                                }
+                            },
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "type": "text/javascript",
+                                        "exec": [
+                                            "pm.test('Operator Vehicle Type Rank returns 200', function() {",
+                                            "    pm.response.to.have.status(200);",
+                                            "});"
+                                        ]
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Settlements",
+                            "request": {
+                                "method": "GET",
+                                "header": [
+                                    {
+                                        "key": "x-observatory-auth",
+                                        "value": "{{analyticToken}}"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{base_url}}/analytics/settlements",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "analytics",
+                                        "settlements"
+                                    ]
+                                }
+                            },
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "type": "text/javascript",
+                                        "exec": [
+                                            "pm.test('Settlements endpoint returns 200', function() {",
+                                            "    pm.response.to.have.status(200);",
+                                            "});"
+                                        ]
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "Analytics - Admin",
+                    "item": [
+                        {
+                            "name": "Login - Analytics Admin",
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/x-www-form-urlencoded"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "urlencoded",
+                                    "urlencoded": [
+                                        {
+                                            "key": "username",
+                                            "value": "admin",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "password",
+                                            "value": "freepasses4all",
+                                            "type": "text"
+                                        }
+                                    ]
+                                },
+                                "url": {
+                                    "raw": "{{base_url}}/login",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "login"
+                                    ]
+                                }
+                            },
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "type": "text/javascript",
+                                        "exec": [
+                                            "pm.test('Analytics Admin Login returns 200', function() {",
+                                            "    pm.response.to.have.status(200);",
+                                            "});",
+                                            "var jsonData = pm.response.json();",
+                                            "pm.test('Token is returned', function() {",
+                                            "    pm.expect(jsonData).to.have.property('token');",
+                                            "});",
+                                            "pm.environment.set('analyticToken', jsonData.token);"
+                                        ]
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Admin Station Popularity",
+                            "request": {
+                                "method": "GET",
+                                "header": [
+                                    {
+                                        "key": "x-observatory-auth",
+                                        "value": "{{analyticToken}}"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{base_url}}/analytics/admin/station-popularity?fromDate=1970-01-01&toDate=3000-01-01",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "analytics",
+                                        "admin",
+                                        "station-popularity"
+                                    ],
+                                    "query": [
+                                        {
+                                            "key": "fromDate",
+                                            "value": "1970-01-01"
+                                        },
+                                        {
+                                            "key": "toDate",
+                                            "value": "3000-01-01"
+                                        }
+                                    ]
+                                }
+                            },
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "type": "text/javascript",
+                                        "exec": [
+                                            "pm.test('Admin Station Popularity returns 200', function() {",
+                                            "    pm.response.to.have.status(200);",
+                                            "});"
+                                        ]
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "Analytics - Analyst",
+                    "item": [
+                        {
+                            "name": "Login - Analytics Analyst",
+                            "request": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/x-www-form-urlencoded"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "urlencoded",
+                                    "urlencoded": [
+                                        {
+                                            "key": "username",
+                                            "value": "analyst0000",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "password",
+                                            "value": "SBb6DesElm",
+                                            "type": "text"
+                                        }
+                                    ]
+                                },
+                                "url": {
+                                    "raw": "{{base_url}}/login",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "login"
+                                    ]
+                                }
+                            },
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "type": "text/javascript",
+                                        "exec": [
+                                            "pm.test('Analytics Analyst Login returns 200', function() {",
+                                            "    pm.response.to.have.status(200);",
+                                            "});",
+                                            "var jsonData = pm.response.json();",
+                                            "pm.test('Token is returned', function() {",
+                                            "    pm.expect(jsonData).to.have.property('token');",
+                                            "});",
+                                            "pm.environment.set('analyticToken', jsonData.token);"
+                                        ]
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Admin Station Popularity (Analyst)",
+                            "request": {
+                                "method": "GET",
+                                "header": [
+                                    {
+                                        "key": "x-observatory-auth",
+                                        "value": "{{analyticToken}}"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{base_url}}/analytics/admin/station-popularity?fromDate=1970-01-01&toDate=3000-01-01",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "analytics",
+                                        "admin",
+                                        "station-popularity"
+                                    ],
+                                    "query": [
+                                        {
+                                            "key": "fromDate",
+                                            "value": "1970-01-01"
+                                        },
+                                        {
+                                            "key": "toDate",
+                                            "value": "3000-01-01"
+                                        }
+                                    ]
+                                }
+                            },
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "type": "text/javascript",
+                                        "exec": [
+                                            "pm.test('Admin Station Popularity (Analyst) returns 200', function() {",
+                                            "    pm.response.to.have.status(200);",
+                                            "});"
+                                        ]
+                                    }
+                                }
+                            ]
                         }
                     ]
                 }
