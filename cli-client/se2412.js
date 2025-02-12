@@ -112,7 +112,11 @@ program
         headers: { 'x-observatory-auth': loadToken() },
       })
 
-      console.log(response.data);
+      if (options.format === 'json') {
+        console.log(JSON.stringify(response.data, null, 2));
+      } else {
+        console.log(response.data);
+      }
     } catch (error) {
       console.log(JSON.stringify(error.response?.data || { error: error.message }, null, 2))
     }
@@ -134,7 +138,11 @@ program
         },
       )
 
-      console.log(response.data);
+      if (options.format === 'json') {
+        console.log(JSON.stringify(response.data, null, 2));
+      } else {
+        console.log(response.data);
+      }
     } catch (error) {
       console.log(JSON.stringify(error.response?.data || { error: error.message }, null, 2))
     }
@@ -156,7 +164,11 @@ program
         },
       )
 
-      console.log(response.data);
+      if (options.format === 'json') {
+        console.log(JSON.stringify(response.data, null, 2));
+      } else {
+        console.log(response.data);
+      }
     } catch (error) {
       console.log(JSON.stringify(error.response?.data || { error: error.message }, null, 2))
     }
@@ -180,7 +192,11 @@ program
         },
       )
 
-      console.log(response.data);
+      if (options.format === 'json') {
+        console.log(JSON.stringify(response.data, null, 2));
+      } else {
+        console.log(response.data);
+      }
     } catch (error) {
       console.log(JSON.stringify(error.response?.data || { error: error.message }, null, 2))
     }
@@ -205,7 +221,11 @@ program
         },
       )
 
-      console.log(response.data);
+      if (options.format === 'json') {
+        console.log(JSON.stringify(response.data, null, 2));
+      } else {
+        console.log(response.data);
+      }
     } catch (error) {
       console.log(JSON.stringify(error.response?.data || { error: error.message }, null, 2))
     }
@@ -230,7 +250,11 @@ program
         },
       )
 
-      console.log(response.data);
+      if (options.format === 'json') {
+        console.log(JSON.stringify(response.data, null, 2));
+      } else {
+        console.log(response.data);
+      }
     } catch (error) {
       console.log(JSON.stringify(error.response?.data || { error: error.message }, null, 2))
     }
@@ -251,7 +275,11 @@ program
         headers: { 'x-observatory-auth': loadToken() },
       })
 
-      console.log(response.data);
+      if (options.format === 'json') {
+        console.log(JSON.stringify(response.data, null, 2));
+      } else {
+        console.log(response.data);
+      }
     } catch (error) {
       console.log(JSON.stringify(error.response?.data || { error: error.message }, null, 2))
     }
