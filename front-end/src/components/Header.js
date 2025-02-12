@@ -1,6 +1,6 @@
 // src/components/Header.js
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Button } from 'react-bootstrap';
 
 function Header({ setIsAuthenticated, setUser }) {
@@ -20,11 +20,9 @@ function Header({ setIsAuthenticated, setUser }) {
     <header>
       <nav>
         <ul style={{ display: 'flex', listStyle: 'none', alignItems: 'center', padding: '1rem' }}>
-          <li style={{ marginRight: '1rem' }}>
-            <Link to="/dashboard">Dashboard</Link>
-          </li>
+          {/* Removed the Dashboard link */}
           <li>
-            <Button variant="outline-secondary" size="sm" onClick={handleLogout}>
+            <Button variant="danger" size="sm" onClick={handleLogout}>
               Logout
             </Button>
           </li>

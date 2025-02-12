@@ -18,9 +18,7 @@ const UserDashboard = ({ user, setIsAuthenticated, setUser }) => {
       <h1 className="text-center">Welcome, {user.username}</h1>
 
       <div className="text-center mb-4">
-        <Button variant="danger" onClick={handleLogout}>
-          Logout
-        </Button>
+        
       </div>
 
       {/* Use ABSOLUTE paths to avoid stacking / nesting issues */}

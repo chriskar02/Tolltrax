@@ -7,7 +7,7 @@ const SettlementTable = ({ settlements }) => {
             <thead>
                 <tr>
                     <th>Operator</th>
-                    <th style={{ textAlign: "center" }}>Total Settlement ($)</th>
+                    <th style={{ textAlign: "center" }}>Total Settlement (€)</th>
                 </tr>
             </thead>
             <tbody>
@@ -21,7 +21,7 @@ const SettlementTable = ({ settlements }) => {
                                     color: settlement.total_settlement < 0 ? "red" : "green"
                                 }}
                             >
-                                {new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(settlement.total_settlement)}
+                                {new Intl.NumberFormat("en-US", { style: "currency", currency: "EUR" }).format(settlement.total_settlement)}
                             </td>
                         </tr>
                     ))

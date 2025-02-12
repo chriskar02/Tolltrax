@@ -291,9 +291,7 @@ const OperatorDashboard = ({ user, setIsAuthenticated }) => {
 
       {/* Logout */}
       <div className="text-center">
-        <Button variant="danger" onClick={handleLogout}>
-          Logout
-        </Button>
+        
       </div>
     </Container>
   );

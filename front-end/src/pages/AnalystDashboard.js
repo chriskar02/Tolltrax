@@ -109,7 +109,7 @@ const AnalystDashboard = ({ user, setIsAuthenticated }) => {
     <Container className="mt-5">
       <h1 className="text-center">Welcome, {user.username}</h1>
       <p className="text-center">
-        This is your analyst dashboard. (Add your specific features here.)
+        Analyst dashboard.
       </p>
 
       <div className="d-flex justify-content-center mb-3">
@@ -148,9 +148,7 @@ const AnalystDashboard = ({ user, setIsAuthenticated }) => {
       )}
 
       <div className="text-center mt-3">
-        <Button variant="danger" onClick={handleLogout}>
-          Logout
-        </Button>
+        
       </div>
     </Container>
   );
