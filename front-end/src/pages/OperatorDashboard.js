@@ -26,7 +26,8 @@ const OperatorDashboard = ({ user, setIsAuthenticated }) => {
     setSettlementsError(null);
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch('http://localhost:9115/api/analytics/settlements', {
+      // Note: endpoint adjusted to match your backend analytics routes mounted on /api
+      const response = await fetch('http://localhost:9115/api/settlements', {
         method: 'GET',
         headers: { 'x-observatory-auth': `Bearer ${token}` },
       });
@@ -59,7 +60,9 @@ const OperatorDashboard = ({ user, setIsAuthenticated }) => {
     setShowPopularity(false);
     try {
       const token = localStorage.getItem('authToken');
-      const url = `http://localhost:9115/api/analytics/operator/station-popularity?fromDate=${popFromDate}&toDate=${popToDate}`;
+      // Adjusted endpoint: remove extra "analytics" prefix if not defined that way.
+      const url = `http://localhost:9115/api/operator/station-popularity?fromDate=${popFromDate}&toDate=${popToDate}`;
+
       const response = await fetch(url, {
         method: 'GET',
         headers: { 'x-observatory-auth': `Bearer ${token}` },
@@ -92,7 +95,9 @@ const OperatorDashboard = ({ user, setIsAuthenticated }) => {
     setShowVR(false);
     try {
       const token = localStorage.getItem('authToken');
-      const url = `http://localhost:9115/api/analytics/operator/vehicle-type-rank?fromDate=${vrFromDate}&toDate=${vrToDate}`;
+      // Adjusted endpoint:
+      const url = `http://localhost:9115/api/operator/vehicle-type-rank?fromDate=${vrFromDate}&toDate=${vrToDate}`;
+
       const response = await fetch(url, {
         method: 'GET',
         headers: { 'x-observatory-auth': `Bearer ${token}` },

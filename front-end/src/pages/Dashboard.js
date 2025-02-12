@@ -3,6 +3,7 @@ import React from 'react';
 import UserDashboard from './UserDashboard';
 import AnalystDashboard from './AnalystDashboard';
 import OperatorDashboard from './OperatorDashboard';
+import AdminDashboard from './AdminDashboard';
 
 function Dashboard({ user, setIsAuthenticated, setUser }) {
   // Normalize user type: convert to lowercase and trim extra spaces.
@@ -25,8 +26,15 @@ function Dashboard({ user, setIsAuthenticated, setUser }) {
         setIsAuthenticated={setIsAuthenticated}
       />
     );
+  } else if (normalizedUserType === "admin") {
+    return (
+      <AdminDashboard
+        user={user}
+        setIsAuthenticated={setIsAuthenticated}
+      />
+    );
   } else {
-    // For any type that isn't "normal" or "analyst", assume it's an operator.
+    // For any type that isn't "normal", "analyst", or "admin" assume it's an operator.
     return (
       <OperatorDashboard
         user={user}

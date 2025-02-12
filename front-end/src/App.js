@@ -10,9 +10,10 @@ import {
 import Header from './components/Header';
 import Footer from './components/Footer';
 import Login from './components/Login';
-import UserDashboard from './pages/UserDashboard'; // Normal user layout
+import UserDashboard from './pages/UserDashboard';
 import AnalystDashboard from './pages/AnalystDashboard';
 import OperatorDashboard from './pages/OperatorDashboard';
+import AdminDashboard from './pages/AdminDashboard';
 import NormalUserPassesDashboard from './pages/NormalUserPassesDashboard';
 import NormalUserBalanceDashboard from './pages/NormalUserBalanceDashboard';
 import axios from 'axios';
@@ -27,6 +28,7 @@ function App() {
       const token = localStorage.getItem('authToken');
       if (token) {
         try {
+          // Using port 9115 with the custom header format
           const response = await axios.get(
             'http://localhost:9115/api/verify-token',
             { headers: { 'x-observatory-auth': `Bearer ${token}` } }
@@ -58,6 +60,7 @@ function App() {
     return <div>Loading...</div>;
   }
 
+  // Normalize user type (e.g. "ADMIN" → "admin")
   const normalizedUserType = user && user.type ? user.type.toLowerCase().trim() : '';
 
   return (
@@ -65,6 +68,7 @@ function App() {
       <div className="App">
         <ConditionalHeader setIsAuthenticated={setIsAuthenticated} setUser={setUser} />
         <Routes>
+          {/* LOGIN OR REDIRECT */}
           <Route
             path="/"
             element={
@@ -75,7 +79,21 @@ function App() {
               )
             }
           />
-          {/* NORMAL USER DASHBOARD WITH NESTED ROUTES */}
+
+          {/* ADMIN route */}
+          {isAuthenticated && user && normalizedUserType === "admin" && (
+            <Route
+              path="/dashboard"
+              element={
+                <AdminDashboard
+                  user={user}
+                  setIsAuthenticated={setIsAuthenticated}
+                />
+              }
+            />
+          )}
+
+          {/* NORMAL USER route with nested "passes" & "balance" */}
           {isAuthenticated && user && normalizedUserType === "normal" && (
             <Route path="/dashboard/*" element={
               <UserDashboard
@@ -92,7 +110,8 @@ function App() {
               />
             </Route>
           )}
-          {/* ANALYST */}
+
+          {/* ANALYST route */}
           {isAuthenticated && user && normalizedUserType === "analyst" && (
             <Route
               path="/dashboard"
@@ -104,10 +123,12 @@ function App() {
               }
             />
           )}
-          {/* OPERATOR (default for any other type) */}
+
+          {/* OPERATOR route (for any type that isn't normal, analyst, or admin) */}
           {isAuthenticated && user &&
             normalizedUserType !== "normal" &&
-            normalizedUserType !== "analyst" && (
+            normalizedUserType !== "analyst" &&
+            normalizedUserType !== "admin" && (
               <Route
                 path="/dashboard"
                 element={
@@ -118,6 +139,8 @@ function App() {
                 }
               />
             )}
+
+          {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         <Footer />
@@ -136,8 +159,3 @@ function ConditionalHeader({ setIsAuthenticated, setUser }) {
 }
 
 export default App;
-
-
-
-
-
