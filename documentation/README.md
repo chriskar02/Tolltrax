@@ -1,12 +1,12 @@
 # Documentation
 
-vpp file που περιέχει:
-- Διαγράμματα UML Activity
-- Διαγράμματα UML Class
-- Διαγράμματα UML Component
-- Διαγράμματα UML Deployment
-- Διαγράμματα UML Sequence
-- Διάγραμμα ER
+A single vpp file containing:
+- UML Activity Diagrams
+- UML Class Diagrams
+- UML Component Diagrams
+- UML Deployment Diagrams
+- UML Sequence Diagrams
+- ER Diagram
 
-και  
-- Εγγραφο SRS - Software Requirements Specification σε editable μορφή
+Additionally:
+- **SRS Document** (Software Requirements Specification) in an editable format.
