@@ -74,7 +74,7 @@ function formatResponse(req, res, data, statusCode = 200) {
 
 
 // Reset stations
-router.post("/admin/resetstations", async (req, res) => {
+router.post("/resetstations", async (req, res) => {
   try {
     const stations = []
     await runTransaction(async (client) => {
@@ -134,14 +134,14 @@ router.post("/admin/resetstations", async (req, res) => {
       }
     })
 
-    formatResponse(req, res, { status: "OK", stations });
+    formatResponse(req, res, { "status": "OK", stations });
   } catch (err) {
-    formatResponse(req, res, { status: "failed", info: err.message }, 500);
+    formatResponse(req, res, { "status": "failed", "info": err.message }, 500);
   }
 })
 
 // Reset passes
-router.post("/admin/resetpasses", async (req, res) => {
+router.post("/resetpasses", async (req, res) => {
   try {
     await runTransaction(async (client) => {
       await client.query(`
@@ -149,9 +149,9 @@ router.post("/admin/resetpasses", async (req, res) => {
                 transceiver RESTART IDENTITY;
             `)
     })
-    formatResponse(req, res, { status: "OK" });
+    formatResponse(req, res, { "status": "OK" });
   } catch (err) {
-    formatResponse(req, res, { status: "failed", info: err.message }, 500);
+    formatResponse(req, res, { "status": "failed", "info": err.message }, 500);
   }
 })
 
@@ -166,7 +166,7 @@ function normalizeRow(row) {
 }
 
 // Add passes and compute debt settlements
-router.post("/admin/addpasses", async (req, res) => {
+router.post("/addpasses", async (req, res) => {
   try {
     let newPasses = 0
 
@@ -280,14 +280,14 @@ router.post("/admin/addpasses", async (req, res) => {
       }
     })
 
-    formatResponse(req, res, { status: "OK", newPasses });
+    formatResponse(req, res, { "status": "OK", newPasses });
   } catch (err) {
-    formatResponse(req, res, { status: "failed", info: err.message }, 500);
+    formatResponse(req, res, { "status": "failed", "info": err.message }, 500);
   }
 })
 
 // Healthcheck
-router.get("/admin/healthcheck", async (req, res) => {
+router.get("/healthcheck", async (req, res) => {
   try {
     await runTransaction(async (client) => {
       // Execute your checks within the transaction
@@ -320,52 +320,52 @@ router.get("/admin/healthcheck", async (req, res) => {
 })
 
 // API Endpoint to manually reset users
-router.post("/admin/resetusers", async (req, res) => {
+router.post("/resetusers", async (req, res) => {
   try {
     const client = await pool.connect()
     await client.query('TRUNCATE TABLE "user" RESTART IDENTITY CASCADE')
     await populateUsers(client)
     client.release()
-    formatResponse(req, res, { status: "OK" });
+    formatResponse(req, res, { "status": "OK" });
   } catch (err) {
-    formatResponse(req, res, { status: "failed", info: err.message }, 500);
+    formatResponse(req, res, { "status": "failed", "info": err.message }, 500);
   }
 })
 
 // API Endpoint to manually reset vehicles
-router.post("/admin/resetvehicles", async (req, res) => {
+router.post("/resetvehicles", async (req, res) => {
   try {
     const client = await pool.connect()
     await client.query("TRUNCATE TABLE vehicle RESTART IDENTITY CASCADE")
     await populateVehicles(client)
     client.release()
-    formatResponse(req, res, { status: "OK" });
+    formatResponse(req, res, { "status": "OK" });
   } catch (err) {
-    formatResponse(req, res, { status: "failed", info: err.message }, 500);
+    formatResponse(req, res, { "status": "failed", "info": err.message }, 500);
   }
 })
 
 // API endpoint for triggering a database dump
-router.post("/admin/dbdump", async (req, res) => {
+router.post("/dbdump", async (req, res) => {
   try {
     // Create a dump filename using a timestamp for uniqueness
     const dumpFilePath = `dump_${Date.now()}.sql`
 
     await dumpDatabase(dumpFilePath)
 
-    formatResponse(req, res, { status: "OK", dumpFile: dumpFilePath });
+    formatResponse(req, res, { "status": "OK", dumpFile: dumpFilePath });
   } catch (error) {
-    formatResponse(req, res, { status: "failed", info: error.message }, 500);
+    formatResponse(req, res, { "status": "failed", "info": error.message }, 500);
   }
 })
 
 // API to update a user
-router.post("/admin/usermod", async (req, res) => {
+router.post("/usermod", async (req, res) => {
   const { username, password } = req.body
 
   if (!username || !password) {
     const reason = "Username and password are required"
-    return formatResponse(req, res, { status: "failed", info: reason }, 400);
+    return formatResponse(req, res, { "status": "failed", "info": reason }, 400);
   }
 
   try {
@@ -401,16 +401,16 @@ router.post("/admin/usermod", async (req, res) => {
 
       message = "User password updated successfully"
     }
-    formatResponse(req, res, { status: "success", info: message });
+    formatResponse(req, res, { "status": "success", "info": message });
   } catch (error) {
     // Handle any errors that occur during the database update
     const reason = "Internal server error"
-    return formatResponse(req, res, { status: "failed", info: reason }, 500);
+    return formatResponse(req, res, { "status": "failed", "info": reason }, 500);
   }
 })
 
 // API to list users
-router.get("/admin/users", async (req, res) => {
+router.get("/users", async (req, res) => {
   try {
     const query = `
           SELECT username
@@ -423,11 +423,11 @@ router.get("/admin/users", async (req, res) => {
     const usernames = result.rows.map((row) => row.username)
 
     // Respond with the list of usernames
-    formatResponse(req, res, { status: "OK", usernames });
+    formatResponse(req, res, { "status": "OK", usernames });
   } catch (error) {
     // Handle any errors that occur during the database query
     const reason = "Internal server error"
-    return formatResponse(req, res, { status: "failed", info: reason }, 500);
+    return formatResponse(req, res, { "status": "failed", "info": reason }, 500);
   }
 })
 

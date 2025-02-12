@@ -80,7 +80,7 @@ router.get("/tollStationPasses/:tollStationID/:date_from/:date_to", async (req, 
       );
 
       if (!stationQuery.rows.length) {
-        return res.status(404).json({
+        return res.status(500).json({
           status: "failed",
           info: `Station ${tollStationID} not found`
         });

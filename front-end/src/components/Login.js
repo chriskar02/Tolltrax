@@ -21,7 +21,7 @@ function Login({ setIsAuthenticated, setUser }) {
     setError('');
 
     try {
-      const response = await axios.post('http://localhost:9115/api/login', {
+      const response = await axios.post('http://localhost:9115/api/auth/login', {
         username,
         password,
       });
@@ -32,7 +32,7 @@ function Login({ setIsAuthenticated, setUser }) {
 
       // Optionally, verify the token immediately to get user info,
       // or decode the token on the client side (if it is not encrypted)
-      const verifyResponse = await axios.get('http://localhost:9115/api/verify-token', {
+      const verifyResponse = await axios.get('http://localhost:9115/api/auth/verify-token', {
         headers: { "x-observatory-auth": token }
       });
 

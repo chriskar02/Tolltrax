@@ -18,16 +18,16 @@ initializeDatabase()
 
     // Register routes only after DB initialization
     const { router: authRoutes } = require("./routes/auth");
-    app.use("/api", authRoutes);
+    app.use("/api/auth", authRoutes);
 
     const passesRoutes = require("./routes/passes");
     app.use("/api", passesRoutes);
 
     const adminRoutes = require("./routes/admin");
-    app.use("/api", adminRoutes);
+    app.use("/api/admin", adminRoutes);
 
     const analyticsRoutes = require("./routes/analytics");
-    app.use("/api", analyticsRoutes);
+    app.use("/api/analytics", analyticsRoutes);
 
     // Catch-all route for debugging
     app.use("*", (req, res) => {
