@@ -7,12 +7,10 @@ const iconv = require("iconv-lite")
 const csv = require("csv-parser")
 const bcrypt = require("bcrypt")
 const saltRounds = 10
-const { authenticateToken } = require("./auth")
+
 
 const pool = getPool() // Get the shared pool instance
 
-// Apply the authentication middleware to all routes in this router
-router.use(authenticateToken);
 
 
 // Helper function for transactions
