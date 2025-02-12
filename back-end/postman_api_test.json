@@ -1,0 +1,809 @@
+{
+    "info": {
+        "_postman_id": "6543210a-1234-4bcd-9876-abcdef123456",
+        "name": "API Testing Collection",
+        "description": "Collection for testing API calls for different routes",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://localhost:9115/api"
+        },
+        {
+            "key": "adminToken",
+            "value": ""
+        },
+        {
+            "key": "tollStationID",
+            "value": "NAO30"
+        },
+        {
+            "key": "date_from",
+            "value": "20220101"
+        },
+        {
+            "key": "date_to",
+            "value": "20220102"
+        },
+        {
+            "key": "stationOpID",
+            "value": "AM"
+        },
+        {
+            "key": "tagOpID",
+            "value": "NAO"
+        }
+    ],
+    "item": [
+        {
+            "name": "Admin Login",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/x-www-form-urlencoded"
+                    }
+                ],
+                "body": {
+                    "mode": "urlencoded",
+                    "urlencoded": [
+                        {
+                            "key": "username",
+                            "value": "admin",
+                            "type": "text"
+                        },
+                        {
+                            "key": "password",
+                            "value": "freepasses4all",
+                            "type": "text"
+                        }
+                    ]
+                },
+                "url": {
+                    "raw": "{{base_url}}/login",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "login"
+                    ]
+                }
+            },
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                            "pm.test('Admin Login returns status 200', function() {",
+                            "    pm.response.to.have.status(200);",
+                            "});",
+                            "var jsonData = pm.response.json();",
+                            "pm.test('Admin token is returned', function() {",
+                            "    pm.expect(jsonData).to.have.property('token');",
+                            "});",
+                            "pm.environment.set('adminToken', jsonData.token);"
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Admin Routes - With Admin Login",
+            "item": [
+                {
+                    "name": "Healthcheck - Admin",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "x-observatory-auth",
+                                "value": "{{adminToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/admin/healthcheck?format=json",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "healthcheck"
+                            ],
+                            "query": [
+                                {
+                                    "key": "format",
+                                    "value": "json"
+                                }
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('Admin Healthcheck returns status 200', function() {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Reset Passes - Admin",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "x-observatory-auth",
+                                "value": "{{adminToken}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/admin/resetpasses?format=json",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "resetpasses"
+                            ],
+                            "query": [
+                                {
+                                    "key": "format",
+                                    "value": "json"
+                                }
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('Reset Passes with admin token returns 200', function() {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Reset Stations - Admin",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "x-observatory-auth",
+                                "value": "{{adminToken}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/admin/resetstations?format=json",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "resetstations"
+                            ],
+                            "query": [
+                                {
+                                    "key": "format",
+                                    "value": "json"
+                                }
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('Reset Stations with admin token returns 200', function() {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "User Modification - Admin",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "x-observatory-auth",
+                                "value": "{{adminToken}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"username\": \"testuser\",\n  \"password\": \"testpass\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/admin/usermod",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "usermod"
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('User Modification with admin token returns success', function() {",
+                                    "    pm.response.to.have.status(200);",
+                                    "    var res = pm.response.json();",
+                                    "    pm.expect(res.status).to.be.oneOf(['success','OK']);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "List Users - Admin",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "x-observatory-auth",
+                                "value": "{{adminToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/admin/users",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "users"
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('List Users with admin token returns usernames array', function() {",
+                                    "    pm.response.to.have.status(200);",
+                                    "    var res = pm.response.json();",
+                                    "    pm.expect(res).to.have.property('usernames');",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Add Passes - Admin",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "x-observatory-auth",
+                                "value": "{{adminToken}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/admin/addpasses",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "addpasses"
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('Add Passes with admin token returns success', function() {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Logout",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    },
+                    {
+                        "key": "x-observatory-auth",
+                        "value": "{{adminToken}}"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/logout",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "logout"
+                    ]
+                }
+            },
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                            "pm.test('Logout returns success', function() {",
+                            "    pm.response.to.have.status(200);",
+                            "});",
+                            "pm.environment.unset('adminToken');"
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Admin Routes - Without Login",
+            "item": [
+                {
+                    "name": "Healthcheck - Admin No Token",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/admin/healthcheck?format=json",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "healthcheck"
+                            ],
+                            "query": [
+                                {
+                                    "key": "format",
+                                    "value": "json"
+                                }
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('Admin Healthcheck without token returns 401', function() {",
+                                    "    pm.response.to.have.status(401);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Reset Passes - Admin No Token",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/admin/resetpasses?format=json",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "resetpasses"
+                            ],
+                            "query": [
+                                {
+                                    "key": "format",
+                                    "value": "json"
+                                }
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('Reset Passes without token returns 401', function() {",
+                                    "    pm.response.to.have.status(401);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Reset Stations - Admin No Token",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/admin/resetstations?format=json",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "resetstations"
+                            ],
+                            "query": [
+                                {
+                                    "key": "format",
+                                    "value": "json"
+                                }
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('Reset Stations without token returns 401', function() {",
+                                    "    pm.response.to.have.status(401);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "User Modification - Admin No Token",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"username\": \"testuser\",\n  \"password\": \"testpass\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/admin/usermod",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "usermod"
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('User Modification without token returns 401', function() {",
+                                    "    pm.response.to.have.status(401);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "List Users - Admin No Token",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/admin/users",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "users"
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('List Users without token returns 401', function() {",
+                                    "    pm.response.to.have.status(401);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Add Passes - Admin No Token",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/admin/addpasses",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "addpasses"
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('Add Passes without token returns 401', function() {",
+                                    "    pm.response.to.have.status(401);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Normal Routes",
+            "item": [
+                {
+                    "name": "Toll Station Passes - Normal",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/tollStationPasses/{{tollStationID}}/{{date_from}}/{{date_to}}?format=json",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "tollStationPasses",
+                                "{{tollStationID}}",
+                                "{{date_from}}",
+                                "{{date_to}}"
+                            ],
+                            "query": [
+                                {
+                                    "key": "format",
+                                    "value": "json"
+                                }
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('Toll Station Passes returns passList', function() {",
+                                    "    pm.response.to.have.status(200);",
+                                    "    var jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData).to.have.property('passList');",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Pass Analysis - Normal",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/passAnalysis/{{stationOpID}}/{{tagOpID}}/{{date_from}}/{{date_to}}?format=json",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "passAnalysis",
+                                "{{stationOpID}}",
+                                "{{tagOpID}}",
+                                "{{date_from}}",
+                                "{{date_to}}"
+                            ],
+                            "query": [
+                                {
+                                    "key": "format",
+                                    "value": "json"
+                                }
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('Pass Analysis returns passList data', function() {",
+                                    "    pm.response.to.have.status(200);",
+                                    "    var data = pm.response.json();",
+                                    "    pm.expect(data).to.have.property('passList');",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Passes Cost - Normal",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/passesCost/{{tollStationID}}/{{tagOpID}}/{{date_from}}/{{date_to}}?format=json",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "passesCost",
+                                "{{tollStationID}}",
+                                "{{tagOpID}}",
+                                "{{date_from}}",
+                                "{{date_to}}"
+                            ],
+                            "query": [
+                                {
+                                    "key": "format",
+                                    "value": "json"
+                                }
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('Passes Cost returns cost information', function() {",
+                                    "    pm.response.to.have.status(200);",
+                                    "    var res = pm.response.json();",
+                                    "    pm.expect(res).to.have.property('nPasses');",
+                                    "    pm.expect(res).to.have.property('passesCost');",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Charges By - Normal",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/chargesBy/{{tollStationID}}/{{date_from}}/{{date_to}}?format=json",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "chargesBy",
+                                "{{tollStationID}}",
+                                "{{date_from}}",
+                                "{{date_to}}"
+                            ],
+                            "query": [
+                                {
+                                    "key": "format",
+                                    "value": "json"
+                                }
+                            ]
+                        }
+                    },
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test('Charges By returns visiting operator list', function() {",
+                                    "    pm.response.to.have.status(200);",
+                                    "    var res = pm.response.json();",
+                                    "    pm.expect(res).to.have.property('vOpList');",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
