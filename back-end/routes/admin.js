@@ -7,10 +7,13 @@ const iconv = require("iconv-lite")
 const csv = require("csv-parser")
 const bcrypt = require("bcrypt")
 const saltRounds = 10
+const { authenticateToken, checkRole } = require("./auth")
 
 
 const pool = getPool() // Get the shared pool instance
 
+router.use(authenticateToken);
+router.use(checkRole(["admin"])); //admin routes only available to logged in admin
 
 
 // Helper function for transactions

@@ -65,28 +65,28 @@ function AdminDashboard({ user }) {
 
   async function resetStations() {
     await performAction(
-      () => axios.post("http://localhost:9115/api/admin/resetstations"),
+      () => axios.post("http://localhost:9115/api/admin/resetstations", {}, { headers: { "x-observatory-auth": token } }),
       "Stations reset successfully"
     );
   }
 
   async function resetPasses() {
     await performAction(
-      () => axios.post("http://localhost:9115/api/admin/resetpasses"),
+      () => axios.post("http://localhost:9115/api/admin/resetpasses", {}, { headers: { "x-observatory-auth": token } }),
       "Passes reset successfully"
     );
   }
 
   async function addPasses() {
     await performAction(
-      () => axios.post("http://localhost:9115/api/admin/addpasses"),
+      () => axios.post("http://localhost:9115/api/admin/addpasses", {}, { headers: { "x-observatory-auth": token } }),
       (response) => `Passes added successfully. New passes: ${response.data.newPasses}`
     );
   }
 
   async function performHealthcheck() {
     await performAction(
-      () => axios.get("http://localhost:9115/api/admin/healthcheck"),
+      () => axios.get("http://localhost:9115/api/admin/healthcheck", { headers: { "x-observatory-auth": token } }),
       "Healthcheck completed successfully!",
       true
     );
@@ -117,10 +117,7 @@ function AdminDashboard({ user }) {
     setTsError(null);
     setTsResult(null);
     try {
-      const response = await axios.get(
-        `http://localhost:9115/api/tollStationPasses/${tollStationID}/${tsDateFrom}/${tsDateTo}`,
-        { headers: { "x-observatory-auth": token } }
-      );
+      const response = await axios.get(`http://localhost:9115/api/tollStationPasses/${tollStationID}/${tsDateFrom}/${tsDateTo}`);
       setTsResult(response.data);
     } catch (err) {
       setTsError(err.response?.data?.info || err.message);
@@ -143,10 +140,7 @@ function AdminDashboard({ user }) {
     setPaError(null);
     setPaResult(null);
     try {
-      const response = await axios.get(
-        `http://localhost:9115/api/passAnalysis/${paStationOpID}/${paTagOpID}/${paDateFrom}/${paDateTo}`,
-        { headers: { "x-observatory-auth": token } }
-      );
+      const response = await axios.get(`http://localhost:9115/api/passAnalysis/${paStationOpID}/${paTagOpID}/${paDateFrom}/${paDateTo}`);
       setPaResult(response.data);
     } catch (err) {
       setPaError(err.response?.data?.info || err.message);
@@ -169,10 +163,7 @@ function AdminDashboard({ user }) {
     setPcError(null);
     setPcResult(null);
     try {
-      const response = await axios.get(
-        `http://localhost:9115/api/passesCost/${pcTollOpID}/${pcTagOpID}/${pcDateFrom}/${pcDateTo}`,
-        { headers: { "x-observatory-auth": token } }
-      );
+      const response = await axios.get(`http://localhost:9115/api/passesCost/${pcTollOpID}/${pcTagOpID}/${pcDateFrom}/${pcDateTo}`);
       setPcResult(response.data);
     } catch (err) {
       setPcError(err.response?.data?.info || err.message);
@@ -194,10 +185,7 @@ function AdminDashboard({ user }) {
     setCbError(null);
     setCbResult(null);
     try {
-      const response = await axios.get(
-        `http://localhost:9115/api/chargesBy/${cbTollOpID}/${cbDateFrom}/${cbDateTo}`,
-        { headers: { "x-observatory-auth": token } }
-      );
+      const response = await axios.get(`http://localhost:9115/api/chargesBy/${cbTollOpID}/${cbDateFrom}/${cbDateTo}`);
       setCbResult(response.data);
     } catch (err) {
       setCbError(err.response?.data?.info || err.message);

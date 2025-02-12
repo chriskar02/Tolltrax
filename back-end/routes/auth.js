@@ -78,7 +78,7 @@ router.post("/logout", (req, res) => {
 
 function authenticateToken(req, res, next) {
     const token = req.headers['x-observatory-auth'];
-
+    console.log("Received token:", token);
     if (!token) {
         return res.status(401).json({ error: "Authentication token required" });
     }
