@@ -18,7 +18,7 @@ initializeDatabase()
 
     // Register routes only after DB initialization
     const { router: authRoutes } = require("./routes/auth");
-    app.use("/api/auth", authRoutes);
+    app.use("/api", authRoutes);
 
     const passesRoutes = require("./routes/passes");
     app.use("/api", passesRoutes);
