@@ -12,26 +12,26 @@ describe("CLI Tests for se2412", function () {
   }
 
   it("should fail login with wrong credentials", (done) => {
-    runCLI("login --username wrongUser --passw wrongPass", (error, stdout) => {
-        const output = JSON.parse(stdout.trim()); 
-        expect(output).to.have.property("status", "failed");
-        expect(output).to.have.property("info"); 
-        done();
+    runCLI("login --username wrongUser --passw wrongPass", (stdout) => {
+      const output = JSON.parse(stdout.trim());
+      expect(output).to.have.property("status", "failed");
+      expect(output).to.have.property("info");
+      done();
     });
   });
 
 
   it("should login successfully", (done) => {
-    runCLI("login --username admin --passw freepasses4all", ( stdout) => {
+    runCLI("login --username admin --passw freepasses4all", (stdout) => {
       expect(stdout).to.include("token");
       done();
     });
-  });  
+  });
 
   it("should check system health", function (done) {
     exec("se2412 healthcheck --format json", (error, stdout) => {
       if (error) return done(error);
-      const output = JSON.parse(stdout.trim()); 
+      const output = JSON.parse(stdout.trim());
       expect(output).to.have.property("status").that.is.oneOf(["OK", "failed"]);
       expect(output).to.have.property("dbconnection").that.is.a("string");
 
@@ -44,11 +44,11 @@ describe("CLI Tests for se2412", function () {
       done();
     });
   });
-  
+
 
   it("should reset passes", function (done) {
     exec("se2412 resetpasses --format json", (stdout) => {
-      const output = JSON.parse(stdout.trim()); 
+      const output = JSON.parse(stdout.trim());
       expect(output).to.have.property("status", "OK");
       done();
     });
@@ -56,7 +56,7 @@ describe("CLI Tests for se2412", function () {
 
   it("should reset stations and return correct format", function (done) {
     exec("se2412 resetstations --format json", (stdout) => {
-      const output = JSON.parse(stdout.trim()); 
+      const output = JSON.parse(stdout.trim());
       expect(output).to.have.property("status", "OK");
       done();
     });
