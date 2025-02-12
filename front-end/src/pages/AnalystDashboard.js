@@ -1,3 +1,4 @@
+// src/pages/AnalystDashboard.js
 import React, { useState } from 'react';
 import { Container, Button, Table } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
@@ -37,7 +38,8 @@ const AnalystDashboard = ({ user, setIsAuthenticated }) => {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'x-observatory-auth': token,
+          // Use the custom header with Bearer token
+          'x-observatory-auth': `Bearer ${token}`,
         },
       });
 
@@ -55,7 +57,7 @@ const AnalystDashboard = ({ user, setIsAuthenticated }) => {
 
   // Prepare data for Chart.js
   const chartData = {
-    labels: stationData.map((item) => item.station_name), // We'll hide these labels on the axis
+    labels: stationData.map((item) => item.station_name), // These labels will be hidden on the axis
     datasets: [
       {
         label: 'Passthrough Count',
@@ -95,7 +97,7 @@ const AnalystDashboard = ({ user, setIsAuthenticated }) => {
         callbacks: {
           label: function (context) {
             const stationName = context.label;     // y-axis label
-            const count = context.parsed.x;        // x-axis value
+            const count = context.parsed.x;          // x-axis value
             return `${stationName}: ${count}`;
           },
         },
@@ -106,7 +108,9 @@ const AnalystDashboard = ({ user, setIsAuthenticated }) => {
   return (
     <Container className="mt-5">
       <h1 className="text-center">Welcome, {user.username}</h1>
-      <p className="text-center">This is your analyst dashboard. (Add your specific features here.)</p>
+      <p className="text-center">
+        This is your analyst dashboard. (Add your specific features here.)
+      </p>
 
       <div className="d-flex justify-content-center mb-3">
         <Button variant="primary" onClick={handleFetchStationPopularity} disabled={loading}>
@@ -118,7 +122,7 @@ const AnalystDashboard = ({ user, setIsAuthenticated }) => {
 
       {stationData.length > 0 && (
         <>
-          {/* Chart with NO Y-axis labels (but station name in tooltips) */}
+          {/* Chart with hidden Y-axis labels (but station names in tooltips) */}
           <div className="mt-4">
             <Bar data={chartData} options={chartOptions} />
           </div>
