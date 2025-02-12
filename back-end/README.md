@@ -5,5 +5,3 @@
 - routes: All the routes of our backend
   πρόσβαση σε δεδομένα (backend).
 - postman_api_test.json: postman collection containing api functional tests
-- cli-client: contains the cli client implemented to access the backend
-    - cli_test.sh: cli client functional test bash script
