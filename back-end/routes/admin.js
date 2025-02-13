@@ -8,6 +8,8 @@ const csv = require("csv-parser")
 const bcrypt = require("bcrypt")
 const saltRounds = 10
 const { authenticateToken, checkRole } = require("./auth")
+const multer = require('multer'); //set up storage for addpasses endpoint
+const upload = multer({ dest: 'uploads/' }); // Files are saved temporarily in "uploads" folder
 
 
 const pool = getPool() // Get the shared pool instance
@@ -167,21 +169,34 @@ function normalizeRow(row) {
 }
 
 // Add passes and compute debt settlements
-router.post("/addpasses", async (req, res) => {
+router.post("/addpasses", upload.single("file"), async (req, res) => {
   try {
-    let newPasses = 0
+    console.log("File received:", req.file); // Log file details
+    if (!req.file) {
+      return res.status(400).json({ status: "failed", info: "No file uploaded." });
+    }
+
+    let newPasses = 0;
 
     await runTransaction(async (client) => {
-      // 1. Load passes from CSV and normalize rows
-      const passesCsvPath = path.join(__dirname, "..", "data", "passes12.csv")
-      const passes = []
+      // 1. Load passes from the uploaded CSV file
+      const passes = [];
       await new Promise((resolve, reject) => {
-        fs.createReadStream(passesCsvPath)
+        fs.createReadStream(req.file.path)
           .pipe(iconv.decodeStream("UTF-8"))
           .pipe(csv())
-          .on("data", (row) => passes.push(normalizeRow(row)))
-          .on("end", resolve)
-          .on("error", reject)
+          .on("data", (row) => {
+            console.log("Parsed row:", row); // Log each parsed row
+            passes.push(normalizeRow(row)); // Normalize and push each row
+          })
+          .on("end", () => {
+            console.log("All rows parsed:", passes.length); // Log total rows parsed
+            resolve();
+          })
+          .on("error", (err) => {
+            console.error("Error parsing CSV:", err);
+            reject(err);
+          });
       })
 
       // 2. Load transceivers from CSV (dummy data) and normalize rows

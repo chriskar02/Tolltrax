@@ -78,11 +78,40 @@ function AdminDashboard({ user }) {
   }
 
   async function addPasses() {
-    await performAction(
-      () => axios.post("http://localhost:9115/api/admin/addpasses", {}, { headers: { "x-observatory-auth": token } }),
-      (response) => `Passes added successfully. New passes: ${response.data.newPasses}`
-    );
+    // Create an input element dynamically
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".csv"; // Restrict to CSV files
+
+    // Add an event listener to handle file selection
+    input.onchange = async (event) => {
+      const file = event.target.files[0]; // Get the selected file
+      if (!file) {
+        console.error("No file selected.");
+        return;
+      }
+
+      // Create a new FormData instance
+      const formData = new FormData();
+      formData.append("file", file); // Append the file with the key "file"
+
+      try {
+        const response = await performAction(() => axios.post("http://localhost:9115/api/admin/addpasses", formData, {
+          headers: {
+            "x-observatory-auth": token,
+            "Content-Type": "multipart/form-data",
+          },
+
+        }), "Passes added successfully");
+      } catch (error) {
+        console.error("Error while uploading passes", error);
+      }
+    };
+
+    // Trigger the file explorer
+    input.click();
   }
+
 
   async function performHealthcheck() {
     await performAction(
