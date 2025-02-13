@@ -176,8 +176,6 @@ router.post("/addpasses", upload.single("file"), async (req, res) => {
       return res.status(400).json({ status: "failed", info: "No file uploaded." });
     }
 
-    let newPasses = 0;
-
     await runTransaction(async (client) => {
       // 1. Load passes from the uploaded CSV file
       const passes = [];
@@ -242,7 +240,6 @@ router.post("/addpasses", upload.single("file"), async (req, res) => {
             pass.charge,
           ],
         )
-        if (result.rowCount > 0) newPasses++
       }
 
       // 5. Load toll stations from CSV and normalize rows
@@ -296,7 +293,7 @@ router.post("/addpasses", upload.single("file"), async (req, res) => {
       }
     })
 
-    formatResponse(req, res, { "status": "OK", newPasses });
+    formatResponse(req, res, { "status": "OK" });
   } catch (err) {
     formatResponse(req, res, { "status": "failed", "info": err.message }, 500);
   }

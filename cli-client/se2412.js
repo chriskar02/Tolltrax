@@ -337,13 +337,18 @@ program
         }
 
         try {
-          response = await axios.post(
-            `${API_BASE_URL}/admin/addpasses`,
-            { source: options.source },
-            {
-              headers: { 'x-observatory-auth': loadToken() },
+          const FormData = require("form-data");
+          const form = new FormData();
+          // Append the file with key "file" (must match the backend's Multer configuration)
+          form.append("file", fs.createReadStream(options.source));
+
+          response = await axios.post(`${API_BASE_URL}/admin/addpasses`, form, {
+            headers: {
+              "x-observatory-auth": loadToken(),
+              // Merge multipart/form-data headers from form-data
+              ...form.getHeaders(),
             },
-          )
+          });
         } catch (error) {
           console.log(JSON.stringify(error.response?.data || { error: error.message }, null, 2))
           process.exit(1)
