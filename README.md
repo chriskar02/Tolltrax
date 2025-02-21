@@ -1,6 +1,6 @@
 # Tolltrax  – "Track, Manage, and Go" #
  
-### Tollway system management system. ###
+### Tollway network management system. ###
 To install:
 - Download postgres on [Windows]([url](https://www.postgresql.org/download/windows/)), [MacOS]([url](https://www.postgresql.org/download/macosx/)) or [Linux]([url](https://www.postgresql.org/download/linux/)).
 - Make sure to use password <diodia> upon setup and the default username <postgres>.
